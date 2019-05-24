@@ -2,7 +2,8 @@
 
 //SIGNAL CLASS:
 
-/*There are two main types of signal: input or output
+/*
+There are two main types of signal: input or output
 
 FF has general output signal 'X'
 */
@@ -31,14 +32,14 @@ public:
 };
 
 //output signal
-class output_signal : public signal
+class signal_output : public signal
 {
 public:
-	output_signal( const char &_label,  const bool &_value = 0);
+	signal_output( const char &_label,  const bool &_value = 0);
 };
  
 //input signal
-class input_signal :public signal {
+class signal_input :public signal {
 public:
-	input_signal(const char &_label, const bool &_value=0);
+	signal_input(const char &_label, const bool &_value=0);
 };

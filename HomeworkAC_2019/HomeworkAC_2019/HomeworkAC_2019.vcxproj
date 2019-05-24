@@ -151,10 +151,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="gate.cpp" />
     <ClCompile Include="HomeworkAC_2019.cpp" />
     <ClCompile Include="signal.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="gate.h" />
     <ClInclude Include="HomeworkAC_2019.h" />
     <ClInclude Include="signal.h" />
   </ItemGroup>
