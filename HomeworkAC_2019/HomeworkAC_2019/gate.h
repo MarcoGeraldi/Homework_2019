@@ -31,8 +31,7 @@ public:
 //NOT Gate
 class NOT : public gate {
 private:
-	//For now, OR gates can handle only 1 input
-	signal_input signal_in_not;
-public:
-	NOT(const signal_input &_signal_in_not);
+	std::vector<signal_output> signal_out;
+ public:
+	NOT(const std::vector<signal_input> & _signal_in);
 };

@@ -33,6 +33,7 @@ OR::OR(const std::vector<signal_input> & _signal_in)
 	this->signal_in = _signal_in;
 
 	//The OUTPUT is LOW by default
+	signal_out.Set(SIGNAL_LOW);
 
 	for (int i = 0; i < signal_in.size(); i++)
 	{
@@ -45,9 +46,12 @@ OR::OR(const std::vector<signal_input> & _signal_in)
 	}
 }
 
-NOT::NOT(const signal_input & _signal_in_not)
+NOT::NOT(const std::vector<signal_input>& _signal_in)
 {
-	this->signal_in_not = _signal_in_not;
-	// simply invert the input signal
-	this->signal_out.Set(!signal_in_not.Read());
+	this->signal_in = _signal_in;
+
+	for (int i = 0; i < signal_in.size(); i++)
+	{
+		signal_out[i].Set(!signal_in[i].Read()); //invert the input for each signal
+	}
 }
