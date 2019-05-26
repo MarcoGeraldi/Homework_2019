@@ -36,10 +36,12 @@ class signal_output : public signal
 {
 public:
 	signal_output( const char &_label,  const bool &_value = 0);
+	signal_output();
 };
  
 //input signal
 class signal_input :public signal {
 public:
 	signal_input(const char &_label, const bool &_value=0);
+	signal_input();
 };
