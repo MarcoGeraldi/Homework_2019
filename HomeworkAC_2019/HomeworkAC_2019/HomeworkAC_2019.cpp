@@ -142,13 +142,16 @@ string getSig(  const string & inputString) {
 }
 
 int main(){ 
-	
+	/*
 	string input = "(a AND b) AND (d AND c)";
-	
 	input=getSig(input);
 	cout << input << endl;
 	input = getSig(input);
 	cout << input << endl; 
+	*/
+	filename_circuitDescr = "descrizione.txt";
+	check_circuitDescr();
+
 	return 0;
 }
 

@@ -45,4 +45,7 @@
       <Filter>File di intestazione</Filter>
     </ClInclude>
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="descrizione.txt" />
+  </ItemGroup>
 </Project>
