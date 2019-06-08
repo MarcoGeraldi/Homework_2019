@@ -22,9 +22,10 @@ AND::AND( const std::vector<signal_input>& _signal_in)
 		//if any of the signal is different from the first one the output should be the opposite of the first one
 		if (signal_in[0].Read()!=signal_in[i].Read())
 		{
-			signal_out.Set(!signal_in[0].Read());
+			signal_out.Set(SIGNAL_LOW);
 			return;
 		}
+
 	}
 }
 

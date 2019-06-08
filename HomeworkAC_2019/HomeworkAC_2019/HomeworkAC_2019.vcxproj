@@ -157,6 +157,7 @@
     <ClCompile Include="signal.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="filecheck.hpp" />
     <ClInclude Include="flipflop.h" />
     <ClInclude Include="gate.h" />
     <ClInclude Include="HomeworkAC_2019.h" />

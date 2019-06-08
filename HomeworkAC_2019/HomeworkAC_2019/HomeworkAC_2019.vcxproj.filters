@@ -41,5 +41,8 @@
     <ClInclude Include="flipflop.h">
       <Filter>File di intestazione</Filter>
     </ClInclude>
+    <ClInclude Include="filecheck.hpp">
+      <Filter>File di intestazione</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
