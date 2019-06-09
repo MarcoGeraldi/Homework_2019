@@ -1,9 +1,21 @@
 module NOME_CIRCUITO_COMB(
-	input a,b
-	input c
-	output c
-	assign x
+clk
+clk
+	 input ,a,b ,
+	output c 
 );
+output
 assign x
-output c
+endmodule
+
+module NOME_CIRCUITO_COMB(
+clk
+sclk
+	 input ,a,b ,
+	output c 
+	input
+	assign
+);
+input
+assign x
 endmodule

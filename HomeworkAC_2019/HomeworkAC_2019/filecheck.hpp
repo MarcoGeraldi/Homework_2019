@@ -13,18 +13,7 @@ std::fstream stream_circuitDescr;
 std::vector < std::vector <signal_input>> matrix_input;
 std::vector < std::vector <signal_output>> matrix_output;
 
-//CHECK FOR OPENING
-bool openFile(std::fstream _fileStream, std::string & _fileName) {
-	bool error = false;
-	_fileStream.open(_fileName, std::fstream::in);
-	if (!_fileStream.is_open())
-	{
-		std::cerr << "error while opening " << _fileName << std::endl;
-		error = true;
-	}
-
-	return error;
-}
+bool isSequential = false; // to check if the circuit is sequential
 
 //INPUT FILE
 
@@ -96,20 +85,21 @@ bool open_inputFile() {
 //CIRCUIT'S DESCRIPTION
 
 /*
-	-verificare se circuito è combinatorio o sequenziale
-	-verificare che ci sia module e endmodule
-	-nel sequenziale deve esserci anche il clock
+	TODO:
+	CONTROLLI SUI FLIFLOP
+	SALVARE FLIPFLOP
+	ERRORI DI SINTASSI
+	SALVARE VARIABILI
 */
 
 bool check_circuitDescr() {
 	bool isOk = true;
 	std::vector <std::string> _description;
-	std::vector <std::istringstream> s_description;
 	std::vector <int> _positionEndmodule, _positionModule;
 	std::vector <int> _positionInput, _positionOutput, _positionAssign, _positionClk;
 	std::vector <int> _positionOpenBracket, _positionCloseBracket;
-	std::string line;
-	std::istringstream s_line;
+	std::string line, temp;
+
 	stream_circuitDescr.open(filename_circuitDescr, std::fstream::in);
 	if (!stream_circuitDescr.is_open())
 	{
@@ -121,9 +111,7 @@ bool check_circuitDescr() {
 	while (!stream_circuitDescr.eof())
 	{
 		std::getline(stream_circuitDescr, line); //read line by line
-		//s_line >> line;
 		_description.push_back(line); //save each line in a vector
-		//s_description.push_back(s_line);
 	}
 	stream_circuitDescr.close();
 
@@ -131,50 +119,89 @@ bool check_circuitDescr() {
 	{
 		if (_description[i].substr(0,7) == "module " || _description[i].substr(0, 7) == "module") //the line should contain the word module 
 		{
-			std::cout << "module found" << std::endl;
 			_positionModule.push_back(i); //save the position of module found in the file
 		}
 
 		if (_description[i].substr(0,10) == "endmodule " || _description[i].substr(0, 10) == "endmodule")
 		{
-			std::cout << "endmodule found" << std::endl;
 			_positionEndmodule.push_back(i); //save the position of the endmodule found in the file
 		}		
 
-		if (_description[i].find("input")!=std::string::npos) //look for the input 
+		if (_description[i].find("input")	!=	std::string::npos) //look for the word input 
 		{
-			_positionInput.push_back(i);
+			std::istringstream _stream_temp(_description[i]); //save the line in a stream
+		
+			_stream_temp >> temp; //save the sentence divided by space in a temporary value
+			if (temp.compare("input")==0) //if the word input is written correct then it saves the position
+			{
+				_positionInput.push_back(i);
+			}
+			else 
+			{
+				std::cerr << "ERROR: syntax error at line " << i + 1 << std::endl;
+				isOk = false;
+			}
 		}
 
-		if (_description[i].find("output")!=std::string::npos)//look for the output in order to use them if the file is correct
+		if (_description[i].find("output")	!=	std::string::npos)//look for the output in order to use them if the file is correct
 		{
-			_positionOutput.push_back(i);
+			std::istringstream _stream_temp(_description[i]); //save the line in a stream
+			_stream_temp >> temp; //save the sentence divided by space in a temporary value
+			if (temp.compare("output") == 0) //if the word input is written correct then it saves the position
+			{
+				_positionOutput.push_back(i);
+			}
+			else
+			{
+				std::cerr << "ERROR: syntax error at line " << i + 1 << std::endl;
+				isOk = false;
+			}
 		}
 
-		if (_description[i].find("assign")!=std::string::npos) //look for the word assing
+		if (_description[i].find("assign")	!=	std::string::npos) //look for the word assing
 		{
-			_positionAssign.push_back(i);
+			std::istringstream _stream_temp(_description[i]); //save the line in a stream
+			_stream_temp >> temp; //save the sentence divided by space in a temporary value
+			if (temp.compare("assign") == 0) //if the word input is written correct then it saves the position
+			{
+				_positionAssign.push_back(i);
+			}
+			else
+			{
+				std::cerr << "ERROR: syntax error at line " << i + 1 << std::endl;
+				isOk = false;
+			}
 		}
 		
-		if (_description[i].find("clk")!=std::string::npos) //look for the word clock 
+		if (_description[i].find("clk")		!=	std::string::npos) //look for the word clock 
 		{
-			_positionClk.push_back(i);
+			
+			std::istringstream _stream_temp(_description[i]); //save the line in a stream
+			_stream_temp >> temp; //save the sentence divided by space in a temporary value
+			if (temp.compare("clk") == 0) //if the word input is written correct then it saves the position
+			{
+				_positionClk.push_back(i);
+			}
+			else
+			{
+				std::cerr << "ERROR: syntax error at line " << i + 1 << std::endl;
+				isOk = false;
+			}
 		}
-
-
-		if (_description[i].find("(") != std::string::npos)
+		
+		if (_description[i].find("(")		!=	std::string::npos)
 		{
 			_positionOpenBracket.push_back(i);
 		}
 
-		if (_description[i].find(")") != std::string::npos) //look for a closed bracket in each line
+		if (_description[i].find(")")		!=	std::string::npos) //look for a closed bracket in each line
 		{
 			_positionCloseBracket.push_back(i); //save the position of the closed bracket
 		}
 
 	}
 
-	if (_positionEndmodule.size() == 0) //if there are no endmodule
+	if (_positionEndmodule.size() == 0) //there are no endmodule
 	{
 		std::cerr << "ERROR: no endmodule found" << std::endl;
 		isOk= false;
@@ -186,31 +213,31 @@ bool check_circuitDescr() {
 		isOk= false;
 	}
 	
-	if (_positionEndmodule.size()!=_positionModule.size()) //if module and endmodule are not matching
+	if (_positionEndmodule.size()!=_positionModule.size()) //module and endmodule are not matching
 	{
 		std::cerr << "ERROR: there are more module than endmodule or viceversa" << std::endl;
 		isOk= false;
 	}
 	
-	if (_positionCloseBracket.size() == 0) //if there are no brackets
+	if (_positionCloseBracket.size() == 0) //there are no closed brackets
 	{
 		std::cerr << "ERROR: no closed brackets found" << std::endl;
 		isOk= false;
 	}
 	 
-	if (_positionOpenBracket.size() == 0)
+	if (_positionOpenBracket.size() == 0)//no opened brackets found
 	{
 		 std::cerr << "ERROR: no opened brackets found" << std::endl;
 		 isOk= false;
 	}
 	
-	if (_positionCloseBracket.size()!= _positionOpenBracket.size()) //if the brackets are not matching
+	if (_positionCloseBracket.size()!= _positionOpenBracket.size()) //the brackets are not matching
 	{
 		std::cerr << "ERROR: there aren't as many opened brackets as closed brackets" << std::endl;
 		isOk= false;
 	}
 	
-	if (_positionAssign.size()==0) //no assign foung
+	if (_positionAssign.size()==0) //no assign found
 	{
 		std::cerr << "ERROR: no assign found" << std::endl;
 		isOk= false;
@@ -230,61 +257,91 @@ bool check_circuitDescr() {
 
 	if (isOk==true) //until now there are no error of sintax
 	{
+
 		for (int i = 0; i < _positionModule.size(); i++)
 		{
-			if (_positionModule[i]>_positionEndmodule[i] && _positionModule.size() == _positionEndmodule.size() )
+			if (_positionModule[i]>_positionEndmodule[i]  )
 			{
 				std::cerr	<< "ERROR: module was found after endmodule or viceversa in the circuit number: " 
 							<< i+1
 							<< std::endl;
-				return false;
+				isOk= false;
 			}
 			
-			if (_positionOpenBracket[i]>_positionCloseBracket[i] && _positionCloseBracket.size() == _positionOpenBracket.size())
+			if (_positionOpenBracket[i]>_positionCloseBracket[i] )
 			{
 				std::cerr	<< "ERROR: the bracket aren't in the right place in the circuit number: " 
 							<< i + 1
 							<< std::endl;
-				return false;
+				isOk= false;
 			}
 			
-			for (int k = 0; k < _positionInput.size(); k++)
+			if (_positionClk.size() > 0)
 			{
-				if (_positionInput[k]<=_positionEndmodule[i]) //for each circuit
+				int innerCounter = 0;
+				for (int counterClk = 0; counterClk < _positionClk.size(); counterClk++)
 				{
-					if (_positionInput[k]<_positionOpenBracket[i] && _positionInput[k]>_positionCloseBracket[i])
-					//control that input's signals are written inside the brackets
+					if (_positionClk[counterClk] > _positionModule[i] && _positionClk[counterClk]<_positionEndmodule[i]) //for each circuit
 					{
-							std::cerr << "ERROR: the input's signals are not inside the brackets" << std::endl;
-							isOk=false;
+						innerCounter++;
+						if (innerCounter>1)
+						{
+							std::cerr << "ERROR: too many clock defined in the circuit number " << i + 1 << std::endl;
+							isOk = false;
+						}
+						else
+						{
+							isSequential = true;
+						}
 					}
 				}
 			}
 
-			for (int k = 0; k < _positionOutput.size(); k++)
+			for (int counterInput=0		; counterInput		<	_positionInput.size();		counterInput++)
 			{
-				if (_positionOutput[k] <= _positionEndmodule[i]) //for each circuit
+				if (_positionInput[counterInput]>_positionModule[i] &&_positionInput[counterInput]<_positionEndmodule[i]) //for each circuit
 				{
-					if (_positionOutput[k]<_positionOpenBracket[i] && _positionOutput[k]>_positionCloseBracket[i])
-								//control that output's signals are written inside the brackets
+					if (_positionInput[counterInput]<_positionOpenBracket[i] || _positionInput[counterInput]>_positionCloseBracket[i])
+					//control that input's signals are written inside the brackets
 					{
-								std::cerr << "ERROR: the output's signals are not inside the brackets" << std::endl;
-								isOk=false;
+						std::cerr	<< "ERROR: the input's signals are not inside the brackets in the circuit number: "
+									<< i + 1	
+									<< std::endl;
+						isOk=false;
 					}
 				}
 			}
-				
-			for (int k = 0; k < _positionAssign.size(); k++)
+
+			for (int counterOutput=0	; counterOutput		<	 _positionOutput.size();	counterOutput++)
 			{
-						
-				if (!(_positionAssign[k]>_positionCloseBracket[i] && _positionAssign[k]<_positionEndmodule[i]))
-					//control that the word assign is written after the closed bracket but before the endmodule
+				if (_positionOutput[counterOutput]>_positionModule[i] &&_positionOutput[counterOutput] < _positionEndmodule[i]) //for each circuit
 				{
-					std::cerr << "ERROR: the assign is not in the right place" << std::endl;
-					isOk= false;
-				}						
+					if (_positionOutput[counterOutput]<_positionOpenBracket[i] || _positionOutput[counterOutput]>_positionCloseBracket[i])
+								//control that output's signals are written inside the brackets
+					{
+						std::cerr	<< "ERROR: the output's signals are not inside the brackets in the circuit number: "
+									<< i+1
+									<< std::endl;
+						isOk=false;
+					}
+				}
 			}
-		}
+			
+			for (int counterAssign=0	; counterAssign		<	 _positionAssign.size();	counterAssign++)
+			{
+				if (_positionAssign[counterAssign] > _positionModule[i] &&_positionAssign[counterAssign] < _positionEndmodule[i])
+				{
+					if (_positionAssign[counterAssign] < _positionCloseBracket[i])//control that the word assign is written after the closed bracket but before the endmodule
+					{
+						std::cerr << "ERROR: the assign is not in the right place in the circuit number: "
+							<< i + 1
+							<< std::endl;
+						isOk = false;
+					}
+				}
+			}
+		}	
+		 
 	}
 	return isOk;
 }
