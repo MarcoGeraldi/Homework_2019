@@ -13,8 +13,7 @@
 #include <iostream>
 #include <sstream>
 #include <algorithm>
-#include <iterator>
-
+ 
 using namespace std;
 
 //returns position of occurrencies
@@ -100,7 +99,7 @@ string getSig(  const string & inputString) {
 	vector<size_t> positionOpen;
 	vector<size_t> positionClose;
 	vector<size_t> positionGate;
-
+	vector<size_t> positionSignal;
 	
 
 	positionOpen = getPositions(_inputString, "(");
@@ -136,7 +135,7 @@ string getSig(  const string & inputString) {
 
 
 	
-	
+		j++;
 	return _inputString;
 	
 }

@@ -1,21 +1,23 @@
 module NOME_CIRCUITO_COMB(
 clk
 clk
-	 input ,a,b ,
+	 input a,b,c
 	output c 
 );
 output
 assign x
+FF3 =
 endmodule
 
 module NOME_CIRCUITO_COMB(
 clk
-sclk
-	 input ,a,b ,
+clk
+	input a,b,
 	output c 
 	input
 	assign
 );
 input
-assign x
+assign x 
+FF5 
 endmodule

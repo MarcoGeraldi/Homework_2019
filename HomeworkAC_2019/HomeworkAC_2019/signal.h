@@ -22,7 +22,7 @@ class signal
 protected:
 	//KIND: Select between input or output signal
 	bool kind;
-	//VALUE: Actual state of the signal, can be HIGH - OR - NOT_DEFINED
+	//VALUE: Actual state of the signal, can be HIGH/LOW - OR - NOT_DEFINED
 	int value;
 	//LABEL: Associate each signal with a char
 	std::string label;

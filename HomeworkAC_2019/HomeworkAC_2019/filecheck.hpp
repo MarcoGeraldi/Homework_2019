@@ -10,6 +10,9 @@ std::string filename_circuitDescr;
 std::fstream stream_inputSignal;
 std::fstream stream_circuitDescr;
 
+std::vector <std::string> _description;
+std::vector <int> _positionInput, _positionOutput, _positionAssign, _positionClk, _positionFF;
+
 std::vector < std::vector <signal_input>> matrix_input;
 std::vector < std::vector <signal_output>> matrix_output;
 
@@ -90,23 +93,22 @@ bool open_inputFile() {
 	SALVARE FLIPFLOP
 	ERRORI DI SINTASSI
 	SALVARE VARIABILI
+	AMARE LA PROPRIA PAPERINA
 */
 
 bool check_circuitDescr() {
 	bool isOk = true;
-	std::vector <std::string> _description;
 	std::vector <int> _positionEndmodule, _positionModule;
-	std::vector <int> _positionInput, _positionOutput, _positionAssign, _positionClk;
 	std::vector <int> _positionOpenBracket, _positionCloseBracket;
 	std::string line, temp;
 
 	stream_circuitDescr.open(filename_circuitDescr, std::fstream::in);
+
 	if (!stream_circuitDescr.is_open())
 	{
 		std::cerr << "error while opening " << filename_circuitDescr << std::endl;
 		return false;
 	}
-
 
 	while (!stream_circuitDescr.eof())
 	{
@@ -117,40 +119,53 @@ bool check_circuitDescr() {
 
 	for (int i = 0; i < _description.size(); i++)
 	{
-		if (_description[i].substr(0,7) == "module " || _description[i].substr(0, 7) == "module") //the line should contain the word module 
+		if (_description[i].substr(0, 7) == "module " || _description[i].substr(0, 7) == "module") //the line should contain the word module 
 		{
 			_positionModule.push_back(i); //save the position of module found in the file
 		}
 
-		if (_description[i].substr(0,10) == "endmodule " || _description[i].substr(0, 10) == "endmodule")
+		if (_description[i].substr(0, 10) == "endmodule " || _description[i].substr(0, 10) == "endmodule")
 		{
 			_positionEndmodule.push_back(i); //save the position of the endmodule found in the file
-		}		
+		}
 
-		if (_description[i].find("input")	!=	std::string::npos) //look for the word input 
+		if (_description[i].find("input") != std::string::npos) //look for the word input 
 		{
 			std::istringstream _stream_temp(_description[i]); //save the line in a stream
-		
-			_stream_temp >> temp; //save the sentence divided by space in a temporary value
-			if (temp.compare("input")==0) //if the word input is written correct then it saves the position
+			std::vector <std::string> _checkInput;
+
+			while (_stream_temp >> temp) //save the sentence divided by space in a temporary value
 			{
-				_positionInput.push_back(i);
+				_checkInput.push_back(temp);
 			}
-			else 
+
+			//da rifare
+			for (int i = 0; i < _checkInput.size(); i++)
 			{
-				std::cerr << "ERROR: syntax error at line " << i + 1 << std::endl;
-				isOk = false;
+				if (_checkInput[0] == "input" && isalpha(_checkInput[2 * i + 1][j]) != 0 && _checkInput[2 * i] == ","&& isalpha(_checkInput[_checkInput.size()][j]) != 0)
+					//if the word input is written correct and also the input's signals are correct then it saves the position
+				{
+					_positionInput.push_back(i);
+				}
+
+				else
+				{
+					std::cerr << "ERROR: syntax error at line " << i + 1 << std::endl;
+					isOk = false;
+				}
 			}
 		}
 
-		if (_description[i].find("output")	!=	std::string::npos)//look for the output in order to use them if the file is correct
+		if (_description[i].find("output") != std::string::npos)//look for the output in order to use them if the file is correct
 		{
 			std::istringstream _stream_temp(_description[i]); //save the line in a stream
 			_stream_temp >> temp; //save the sentence divided by space in a temporary value
+
 			if (temp.compare("output") == 0) //if the word input is written correct then it saves the position
 			{
 				_positionOutput.push_back(i);
 			}
+
 			else
 			{
 				std::cerr << "ERROR: syntax error at line " << i + 1 << std::endl;
@@ -158,48 +173,76 @@ bool check_circuitDescr() {
 			}
 		}
 
-		if (_description[i].find("assign")	!=	std::string::npos) //look for the word assing
+		if (_description[i].find("assign") != std::string::npos) //look for the word assing
 		{
 			std::istringstream _stream_temp(_description[i]); //save the line in a stream
 			_stream_temp >> temp; //save the sentence divided by space in a temporary value
+
 			if (temp.compare("assign") == 0) //if the word input is written correct then it saves the position
 			{
 				_positionAssign.push_back(i);
 			}
+
 			else
 			{
 				std::cerr << "ERROR: syntax error at line " << i + 1 << std::endl;
 				isOk = false;
 			}
 		}
-		
-		if (_description[i].find("clk")		!=	std::string::npos) //look for the word clock 
+
+		if (_description[i].find("clk") != std::string::npos) //look for the word clock 
 		{
-			
+
 			std::istringstream _stream_temp(_description[i]); //save the line in a stream
 			_stream_temp >> temp; //save the sentence divided by space in a temporary value
+
 			if (temp.compare("clk") == 0) //if the word input is written correct then it saves the position
 			{
 				_positionClk.push_back(i);
 			}
+
 			else
 			{
 				std::cerr << "ERROR: syntax error at line " << i + 1 << std::endl;
 				isOk = false;
 			}
 		}
-		
-		if (_description[i].find("(")		!=	std::string::npos)
+
+		if (_description[i].find("(") != std::string::npos)
 		{
 			_positionOpenBracket.push_back(i);
 		}
 
-		if (_description[i].find(")")		!=	std::string::npos) //look for a closed bracket in each line
+		if (_description[i].find(")") != std::string::npos) //look for a closed bracket in each line
 		{
 			_positionCloseBracket.push_back(i); //save the position of the closed bracket
 		}
 
+		if (_description[i].find("FF") != std::string::npos)//look for a flipflop
+		{
+			std::istringstream _stream_temp(_description[i]); //save the line in a stream
+			std::string _flipFlop;
+
+			_stream_temp >> temp; //save the first word in a temporary value that should be FF number
+			_flipFlop = temp;
+
+		for (int j = 0; j < _flipFlop.length() - 2; j++)
+		{
+			if (_flipFlop[0] == 'F' && _flipFlop[1] == 'F' && isdigit(_flipFlop[j + 2]) != 0)
+				//the first and the second words have to be F and then just numbers
+			{
+				_positionFF.push_back(i);
+				isOk = true;
+			}
+
+			else
+			{
+				isOk = false;
+				std::cerr << "ERROR: syntax error at line " << i + 1 << std::endl;
+			}
+		}
 	}
+}
 
 	if (_positionEndmodule.size() == 0) //there are no endmodule
 	{
@@ -258,9 +301,9 @@ bool check_circuitDescr() {
 	if (isOk==true) //until now there are no error of sintax
 	{
 
-		for (int i = 0; i < _positionModule.size(); i++)
+		for (int i = 0; i < _positionModule.size(); i++) 
 		{
-			if (_positionModule[i]>_positionEndmodule[i]  )
+			if (_positionModule[i]>_positionEndmodule[i]  ) //module has to be before endmodule
 			{
 				std::cerr	<< "ERROR: module was found after endmodule or viceversa in the circuit number: " 
 							<< i+1
@@ -268,7 +311,7 @@ bool check_circuitDescr() {
 				isOk= false;
 			}
 			
-			if (_positionOpenBracket[i]>_positionCloseBracket[i] )
+			if (_positionOpenBracket[i]>_positionCloseBracket[i] ) //opened bracket before the closed one
 			{
 				std::cerr	<< "ERROR: the bracket aren't in the right place in the circuit number: " 
 							<< i + 1
@@ -276,22 +319,25 @@ bool check_circuitDescr() {
 				isOk= false;
 			}
 			
-			if (_positionClk.size() > 0)
+			if (_positionClk.size() > 0) //if there a clock
 			{
 				int innerCounter = 0;
+
 				for (int counterClk = 0; counterClk < _positionClk.size(); counterClk++)
 				{
 					if (_positionClk[counterClk] > _positionModule[i] && _positionClk[counterClk]<_positionEndmodule[i]) //for each circuit
 					{
 						innerCounter++;
-						if (innerCounter>1)
+
+						if (innerCounter>1) //just one clock in a circuit
 						{
 							std::cerr << "ERROR: too many clock defined in the circuit number " << i + 1 << std::endl;
 							isOk = false;
 						}
+
 						else
 						{
-							isSequential = true;
+							isSequential = true; //da rifare
 						}
 					}
 				}
@@ -329,11 +375,26 @@ bool check_circuitDescr() {
 			
 			for (int counterAssign=0	; counterAssign		<	 _positionAssign.size();	counterAssign++)
 			{
-				if (_positionAssign[counterAssign] > _positionModule[i] &&_positionAssign[counterAssign] < _positionEndmodule[i])
+				if (_positionAssign[counterAssign] > _positionModule[i] &&_positionAssign[counterAssign] < _positionEndmodule[i])//for each circuit
 				{
-					if (_positionAssign[counterAssign] < _positionCloseBracket[i])//control that the word assign is written after the closed bracket but before the endmodule
+					if (_positionAssign[counterAssign] < _positionCloseBracket[i])
+						//control that the word assign is written after the closed bracket but before the endmodule
 					{
 						std::cerr << "ERROR: the assign is not in the right place in the circuit number: "
+							<< i + 1
+							<< std::endl;
+						isOk = false;
+					}
+				}
+			}
+			for (int counterFF = 0; counterFF < _positionFF.size(); counterFF++)
+			{
+				if (_positionFF[counterFF] > _positionModule[i] && _positionFF[counterFF] < _positionEndmodule[i])//for each circuit
+				{
+					if (_positionFF[counterFF] < _positionCloseBracket[i])
+						//control that the fliflop is written after the closed bracket but before the endmodule
+					{
+						std::cerr << "ERROR: the flipflop is not in the right place in the circuit number: "
 							<< i + 1
 							<< std::endl;
 						isOk = false;
@@ -346,4 +407,21 @@ bool check_circuitDescr() {
 	return isOk;
 }
 
+//SAVE THE INPUT'S AND OUTPUT'S SIGNALS
+void save_Signals() {
+	if (check_circuitDescr) //if there are no mistakes in the file
+	{
+		for (int i = 0; i < _positionInput.size(); i++)
+		{
+			for (int j = _positionInput[i]; j < _description.size(); j++)
+			{
+				std::istringstream _stream_temp(_description[j]);
+				std::string _temp;
+				while (_stream_temp >> _temp) //divide the string when it finds a space
+				{
 
+				}
+			}
+		}
+	}
+}
