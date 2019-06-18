@@ -10,7 +10,7 @@ std::string signal::getLabel()
 	return label;
 }
 
-void signal::Set(const bool &_value)
+void signal::Set(const int &_value)
 {
 	this->value = _value;
 }
@@ -20,7 +20,8 @@ void signal::Set(const std::string & _value)
 	std::istringstream s_value(_value);
 	int b_value;
 	s_value >> b_value;
-	value >> b_value;
+	this->value = b_value;
+
 }
 
 void signal::operator=(const signal & to_assign)

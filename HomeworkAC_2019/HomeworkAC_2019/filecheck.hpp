@@ -96,7 +96,8 @@ bool open_inputFile() {
 	AMARE LA PROPRIA PAPERINA
 */
 
-bool check_circuitDescr() {
+bool check_circuitDescr() 
+{
 	bool isOk = true;
 	std::vector <int> _positionEndmodule, _positionModule;
 	std::vector <int> _positionOpenBracket, _positionCloseBracket;
@@ -140,6 +141,7 @@ bool check_circuitDescr() {
 			}
 
 			//da rifare
+			int j = 0;
 			for (int i = 0; i < _checkInput.size(); i++)
 			{
 				if (_checkInput[0] == "input" && isalpha(_checkInput[2 * i + 1][j]) != 0 && _checkInput[2 * i] == ","&& isalpha(_checkInput[_checkInput.size()][j]) != 0)
@@ -226,23 +228,23 @@ bool check_circuitDescr() {
 			_stream_temp >> temp; //save the first word in a temporary value that should be FF number
 			_flipFlop = temp;
 
-		for (int j = 0; j < _flipFlop.length() - 2; j++)
-		{
-			if (_flipFlop[0] == 'F' && _flipFlop[1] == 'F' && isdigit(_flipFlop[j + 2]) != 0)
-				//the first and the second words have to be F and then just numbers
+			for (int j = 0; j < _flipFlop.length() - 2; j++)
 			{
-				_positionFF.push_back(i);
-				isOk = true;
-			}
+				if (_flipFlop[0] == 'F' && _flipFlop[1] == 'F' && isdigit(_flipFlop[j + 2]) != 0)
+					//the first and the second words have to be F and then just numbers
+				{
+					_positionFF.push_back(i);
+					isOk = true;
+				}
 
-			else
-			{
-				isOk = false;
-				std::cerr << "ERROR: syntax error at line " << i + 1 << std::endl;
+				else
+				{
+					isOk = false;
+					std::cerr << "ERROR: syntax error at line " << i + 1 << std::endl;
+				}
 			}
 		}
 	}
-}
 
 	if (_positionEndmodule.size() == 0) //there are no endmodule
 	{

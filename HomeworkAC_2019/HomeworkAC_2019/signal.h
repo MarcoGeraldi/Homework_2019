@@ -33,7 +33,7 @@ public:
 	int Read();
 	std::string getLabel();
 	//SET FUNCTION: Set the value High or low
-	void Set(const bool & _value);
+	void Set(const int & _value);
 	void Set(const std::string &_value);
 	
 	void operator=	(const signal & to_assign);
