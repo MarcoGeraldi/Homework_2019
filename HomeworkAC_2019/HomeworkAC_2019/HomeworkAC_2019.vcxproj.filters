@@ -44,10 +44,10 @@
     <ClInclude Include="filecheck.hpp">
       <Filter>File di intestazione</Filter>
     </ClInclude>
-    <ClInclude Include="tree.hpp">
+    <ClInclude Include="stringParser.hpp">
       <Filter>File di intestazione</Filter>
     </ClInclude>
-    <ClInclude Include="stringParser.hpp">
+    <ClInclude Include="btree.hpp">
       <Filter>File di intestazione</Filter>
     </ClInclude>
   </ItemGroup>

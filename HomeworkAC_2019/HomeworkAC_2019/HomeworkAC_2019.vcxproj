@@ -157,13 +157,13 @@
     <ClCompile Include="signal.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="btree.hpp" />
     <ClInclude Include="filecheck.hpp" />
     <ClInclude Include="flipflop.h" />
     <ClInclude Include="gate.h" />
     <ClInclude Include="HomeworkAC_2019.h" />
     <ClInclude Include="signal.h" />
     <ClInclude Include="stringParser.hpp" />
-    <ClInclude Include="tree.hpp" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="descrizione.txt" />

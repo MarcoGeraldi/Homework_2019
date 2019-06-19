@@ -87,8 +87,12 @@ signal_output solve(const vector < string > &_toSolve) {
 	sig.push_back(sig1);
 	sig.push_back(sig2);
 
-	if (_toSolve[1] == "AND") { AND and_gate(sig);	out.Set(and_gate.Read()); }
-	if (_toSolve[1] == "OR") { OR or_gate(sig);	out.Set(or_gate.Read()); }
+	if (_toSolve[1] == "AND")	{ AND and_gate(sig);	out.Set(	and_gate.Read()		); }
+	if (_toSolve[1] == "OR")	{ OR or_gate(sig);		out.Set(	or_gate.Read()		); }
+	if (_toSolve[1] == "NOR")	{ NOR nor_gate(sig);	out.Set(	nor_gate.Read()		); }
+	if (_toSolve[1] == "XOR")	{ XOR xor_gate(sig);	out.Set(	xor_gate.Read()		); }
+	if (_toSolve[1] == "NAND")	{ NAND nand_gate(sig);	out.Set(	nand_gate.Read()	); }
+	if (_toSolve[1] == "XNOR")	{ XNOR xnor_gate(sig);	out.Set(	xnor_gate.Read()	); }
 	/*
 	std::cout << "sig1: " << sig1.Read() << std::endl
 		<< "sig2: " << sig2.Read() << std::endl
@@ -147,7 +151,6 @@ string getSig(const string & inputString) {
 
 		positionClose.erase(positionClose.begin() + counterClose);
 		positionOpen.erase(positionOpen.begin() + counterOpen);
-
 
 		return _inputString;
 	}

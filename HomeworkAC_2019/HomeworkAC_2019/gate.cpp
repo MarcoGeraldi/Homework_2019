@@ -67,6 +67,7 @@ NAND::NAND(const std::vector<signal_input>& _signal_in)
 	this->signal_out.Set( NOT_GATE.Read());
 }
 
+//da sistemare non funziona
 XOR::XOR(const std::vector<signal_input>& _signal_in)
 {
 	this->signal_out.Set(SIGNAL_LOW);
@@ -95,4 +96,17 @@ NOR::NOR(const std::vector<signal_input>& _signal_in)
 	NOT NOT_GATE(not_signal);
 
 	this->signal_out.Set(NOT_GATE.Read());
+}
+
+XNOR::XNOR(const std::vector<signal_input>& _signal_in)
+{
+	this->signal_in = _signal_in;
+
+	NOR NOR_GATE(signal_in);
+	signal_input not_signal;
+	not_signal.Set(NOR_GATE.Read());
+	NOT NOT_GATE(not_signal);
+
+	this->signal_out.Set(NOT_GATE.Read());
+
 }
