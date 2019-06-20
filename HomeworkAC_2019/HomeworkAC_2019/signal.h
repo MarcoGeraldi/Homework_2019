@@ -20,7 +20,7 @@ FF has general output signal '-1'
 class signal
 {
 protected:
-	//KIND: Select between input or output signal
+	//KIND: Select between INPUT or OUTPUT signal
 	bool kind;
 	//VALUE: Actual state of the signal, can be HIGH/LOW - OR - NOT_DEFINED
 	int value;
@@ -47,12 +47,11 @@ class signal_output : public signal
 public:
 	signal_output( const std::string &_label,  const bool &_value = 0);
 	signal_output();
-
 };
  
 //input signal
 class signal_input :public signal {
 public:
-	signal_input(const std::string &_label, const bool &_value=0);
+	signal_input(const std::string &_label, const bool &_value = 0);
 	signal_input();
 };

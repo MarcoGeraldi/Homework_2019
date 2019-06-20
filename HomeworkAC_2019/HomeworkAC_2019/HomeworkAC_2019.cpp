@@ -11,18 +11,44 @@
 
 int main(){ 
 	
-	string input = "((l NAND m) AND (c OR d) ) OR (d XOR e)";
+	string input = "(a AND (NOT b)) OR (c XOR (NOT (e NAND d)))";
+	//cout << getValue(input);
 	//cout << "value is " << getValue(input) << endl;
+/*
+	filename_circuitDescr = "descrizione.txt";
+	check_circuitDescr();
+	checkSignals();*/
 
-	//filename_circuitDescr = "descrizione.txt";
-	//check_circuitDescr();
-	btree * head;
+	/*btree * head;
 	head= builtTree(input);
 	std::cout << "testa:" << head->value << std::endl
-		<< "dx di testa:" << head->right->value << endl
-		<< "sx di XOR:" << head->right->left->value << endl
-		<< "sx di AND: " << head->left->left->value << endl
-		<< "dx di NAND: " << head->left->left->right->value << endl;
+		<< "genitore di OR:" << head->right->right->right->parent->value << endl
+		<< "genitore di a: " << head->left->parent->value << endl
+		<< "genitore di AND: " << head->right->right->parent->value << endl;*/
+	/*std::vector <calculatepath> cammino;
+	btree *head;
+	head = builtTree(input);
+	cammino = Path(head);*/
+
+	//vector <string> c, min, max;
+	/*c = coniLogici(input);
+	for (int i = 0; i < c.size(); i++)
+	{
+		std::cout << "gli input associati all'output sono: "
+			<< c[i] << std::endl;
+	}*/
+	//min = findMin(input);
+	//max = findMax(input);
+	/*for (int i = 0; i < min.size(); i++)
+	{
+		std::cout << "gli input con percorso minore sono: "
+			<< min[i] << std::endl;
+	}*/
+	/*for (int i = 0; i < max.size(); i++)
+	{
+		std::cout << "gli input con percorso maggiore sono: "
+			<< max[i] << std::endl;
+	}*/
 	return 0;
 }
 

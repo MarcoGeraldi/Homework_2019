@@ -1,23 +1,19 @@
 module NOME_CIRCUITO_COMB(
-clk
-clk
-	 input a,b,c
-	output c 
+	input a, b[44]
+	input c 
+	output x, y
 );
-output
-assign x
-FF3 =
+assign x = c OR (a AND b)
+assign y = NOT c
 endmodule
 
 module NOME_CIRCUITO_COMB(
 clk
-clk
-	input a,b,
-	output c 
-	input
-	assign
+	input e, d
+	output c, M
+	input m
 );
-input
+
 assign x 
 FF5 
 endmodule

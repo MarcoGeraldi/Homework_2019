@@ -11,10 +11,14 @@ std::fstream stream_inputSignal;
 std::fstream stream_circuitDescr;
 
 std::vector <std::string> _description;
-std::vector <int> _positionInput, _positionOutput, _positionAssign, _positionClk, _positionFF;
 
 std::vector < std::vector <signal_input>> matrix_input;
 std::vector < std::vector <signal_output>> matrix_output;
+std::vector <std::string> all_input, all_output, all_assign, all_FF;
+
+std::vector <int> _positionEndmodule, _positionModule;
+std::vector <int> _positionOpenBracket, _positionCloseBracket;
+std::vector <int> _positionInput, _positionOutput, _positionAssign, _positionClk, _positionFF;
 
 bool isSequential = false; // to check if the circuit is sequential
 
@@ -96,11 +100,33 @@ bool open_inputFile() {
 	AMARE LA PROPRIA PAPERINA
 */
 
+void checkString_Save(std::string &_temp, const std::string & _word_to_compare, std::vector <int> &_position, int & _index, bool _ok, std::vector <std::string> & _save_line) {
+
+	std::string divided_string;
+
+	if (_temp.find(_word_to_compare) != std::string::npos)//look for the output in order to use them if the file is correct
+	{
+		std::istringstream _stream_temp(_temp); //save the line in a stream
+		_stream_temp >> divided_string; //save the sentence divided by space in a temporary value
+
+		if (divided_string.compare(_word_to_compare) == 0) //if the word input is written correct then it saves the position
+		{
+			_position.push_back(_index);
+			_save_line.push_back(_temp); //save the line
+		}
+
+		else
+		{
+			std::cerr << "ERROR: syntax error at line " << _index + 1 << std::endl;
+			_ok = false;
+		}
+	}
+}
+
 bool check_circuitDescr() 
 {
+	int index = 0;
 	bool isOk = true;
-	std::vector <int> _positionEndmodule, _positionModule;
-	std::vector <int> _positionOpenBracket, _positionCloseBracket;
 	std::string line, temp;
 
 	stream_circuitDescr.open(filename_circuitDescr, std::fstream::in);
@@ -114,115 +140,42 @@ bool check_circuitDescr()
 	while (!stream_circuitDescr.eof())
 	{
 		std::getline(stream_circuitDescr, line); //read line by line
-		_description.push_back(line); //save each line in a vector
-	}
-	stream_circuitDescr.close();
 
-	for (int i = 0; i < _description.size(); i++)
-	{
-		if (_description[i].substr(0, 7) == "module " || _description[i].substr(0, 7) == "module") //the line should contain the word module 
+		if (line.find("module") != std::string::npos)
 		{
-			_positionModule.push_back(i); //save the position of module found in the file
-		}
-
-		if (_description[i].substr(0, 10) == "endmodule " || _description[i].substr(0, 10) == "endmodule")
-		{
-			_positionEndmodule.push_back(i); //save the position of the endmodule found in the file
-		}
-
-		if (_description[i].find("input") != std::string::npos) //look for the word input 
-		{
-			std::istringstream _stream_temp(_description[i]); //save the line in a stream
-			std::vector <std::string> _checkInput;
-
-			while (_stream_temp >> temp) //save the sentence divided by space in a temporary value
+			if (line.substr(0, 7) == "module " || line.substr(0, 7) == "module") //the line should contain the word module 
 			{
-				_checkInput.push_back(temp);
-			}
-
-			//da rifare
-			int j = 0;
-			for (int i = 0; i < _checkInput.size(); i++)
-			{
-				if (_checkInput[0] == "input" && isalpha(_checkInput[2 * i + 1][j]) != 0 && _checkInput[2 * i] == ","&& isalpha(_checkInput[_checkInput.size()][j]) != 0)
-					//if the word input is written correct and also the input's signals are correct then it saves the position
-				{
-					_positionInput.push_back(i);
-				}
-
-				else
-				{
-					std::cerr << "ERROR: syntax error at line " << i + 1 << std::endl;
-					isOk = false;
-				}
+				_positionModule.push_back(index); //save the position of module found in the file
 			}
 		}
-
-		if (_description[i].find("output") != std::string::npos)//look for the output in order to use them if the file is correct
+		if (line.find("endmodule") != std::string::npos)
 		{
-			std::istringstream _stream_temp(_description[i]); //save the line in a stream
-			_stream_temp >> temp; //save the sentence divided by space in a temporary value
-
-			if (temp.compare("output") == 0) //if the word input is written correct then it saves the position
+			if (line.substr(0, 10) == "endmodule " || line.substr(0, 10) == "endmodule")
 			{
-				_positionOutput.push_back(i);
+				_positionEndmodule.push_back(index); //save the position of the endmodule found in the file
 			}
-
 			else
 			{
-				std::cerr << "ERROR: syntax error at line " << i + 1 << std::endl;
 				isOk = false;
+				std::cerr << "ERROR: syntax error at line " << index + 1 << std::endl;
 			}
 		}
 
-		if (_description[i].find("assign") != std::string::npos) //look for the word assing
+		checkString_Save(line, "input", _positionInput, index, isOk, all_input);
+		checkString_Save(line, "output", _positionOutput, index, isOk, all_output);
+		checkString_Save(line, "assign", _positionAssign, index, isOk, all_assign);
+
+		if (line.find(")") != std::string::npos && line.find(";") != std::string::npos)
 		{
-			std::istringstream _stream_temp(_description[i]); //save the line in a stream
-			_stream_temp >> temp; //save the sentence divided by space in a temporary value
-
-			if (temp.compare("assign") == 0) //if the word input is written correct then it saves the position
-			{
-				_positionAssign.push_back(i);
-			}
-
-			else
-			{
-				std::cerr << "ERROR: syntax error at line " << i + 1 << std::endl;
-				isOk = false;
-			}
+			_positionCloseBracket.push_back(index);
 		}
-
-		if (_description[i].find("clk") != std::string::npos) //look for the word clock 
-		{
-
-			std::istringstream _stream_temp(_description[i]); //save the line in a stream
-			_stream_temp >> temp; //save the sentence divided by space in a temporary value
-
-			if (temp.compare("clk") == 0) //if the word input is written correct then it saves the position
-			{
-				_positionClk.push_back(i);
-			}
-
-			else
-			{
-				std::cerr << "ERROR: syntax error at line " << i + 1 << std::endl;
-				isOk = false;
-			}
+		if (line.find("(") != std::string::npos && line.find("module") != std::string::npos)
+		{		
+			_positionOpenBracket.push_back(index);
 		}
-
-		if (_description[i].find("(") != std::string::npos)
+		if (line.find("FF") != std::string::npos)//look for a flipflop
 		{
-			_positionOpenBracket.push_back(i);
-		}
-
-		if (_description[i].find(")") != std::string::npos) //look for a closed bracket in each line
-		{
-			_positionCloseBracket.push_back(i); //save the position of the closed bracket
-		}
-
-		if (_description[i].find("FF") != std::string::npos)//look for a flipflop
-		{
-			std::istringstream _stream_temp(_description[i]); //save the line in a stream
+			std::istringstream _stream_temp(line); //save the line in a stream
 			std::string _flipFlop;
 
 			_stream_temp >> temp; //save the first word in a temporary value that should be FF number
@@ -233,18 +186,167 @@ bool check_circuitDescr()
 				if (_flipFlop[0] == 'F' && _flipFlop[1] == 'F' && isdigit(_flipFlop[j + 2]) != 0)
 					//the first and the second words have to be F and then just numbers
 				{
-					_positionFF.push_back(i);
+					_positionFF.push_back(index);
+					all_FF.push_back(line);
 					isOk = true;
 				}
 
 				else
 				{
 					isOk = false;
-					std::cerr << "ERROR: syntax error at line " << i + 1 << std::endl;
+					std::cerr << "ERROR: syntax error at line " << index + 1 << std::endl;
 				}
 			}
 		}
+
+		if (line.find("clk") != std::string::npos) //look for the word clock 
+		{
+
+			std::istringstream _stream_temp(line); //save the line in a stream
+			_stream_temp >> temp; //save the sentence divided by space in a temporary value
+
+			if (temp.compare("clk") == 0) //if the word input is written correct then it saves the position
+			{
+				_positionClk.push_back(index);
+			}
+
+			else
+			{
+				std::cerr << "ERROR: syntax error at line " << index + 1 << std::endl;
+				isOk = false;
+			}
+		}
+		index++;
 	}
+	stream_circuitDescr.close();
+
+	//for (int i = 0; i < _description.size(); i++)
+	//{
+	//	if (_description[i].substr(0, 7) == "module " || _description[i].substr(0, 7) == "module") //the line should contain the word module 
+	//	{
+	//		_positionModule.push_back(i); //save the position of module found in the file
+	//	}
+
+	//	if (_description[i].substr(0, 10) == "endmodule " || _description[i].substr(0, 10) == "endmodule")
+	//	{
+	//		_positionEndmodule.push_back(i); //save the position of the endmodule found in the file
+	//	}
+
+	//	if (_description[i].find("input") != std::string::npos) //look for the word input 
+	//	{
+	//		std::istringstream _stream_temp(_description[i]); //save the line in a stream
+	//		std::vector <std::string> _checkInput;
+
+	//		while (_stream_temp >> temp) //save the sentence divided by space in a temporary value
+	//		{
+	//			_checkInput.push_back(temp);
+	//		}
+
+	//		//da rifare
+	//		int j = 0;
+	//		for (int i = 0; i < _checkInput.size(); i++)
+	//		{
+	//			if (_checkInput[0] == "input" && isalpha(_checkInput[2 * i + 1][j]) != 0 && _checkInput[2 * i] == ","&& isalpha(_checkInput[_checkInput.size()][j]) != 0)
+	//				//if the word input is written correct and also the input's signals are correct then it saves the position
+	//			{
+	//				_positionInput.push_back(i);
+	//			}
+
+	//			else
+	//			{
+	//				std::cerr << "ERROR: syntax error at line " << i + 1 << std::endl;
+	//				isOk = false;
+	//			}
+	//		}
+	//	}
+
+	//	if (_description[i].find("output") != std::string::npos)//look for the output in order to use them if the file is correct
+	//	{
+	//		std::istringstream _stream_temp(_description[i]); //save the line in a stream
+	//		_stream_temp >> temp; //save the sentence divided by space in a temporary value
+
+	//		if (temp.compare("output") == 0) //if the word input is written correct then it saves the position
+	//		{
+	//			_positionOutput.push_back(i);
+	//		}
+
+	//		else
+	//		{
+	//			std::cerr << "ERROR: syntax error at line " << i + 1 << std::endl;
+	//			isOk = false;
+	//		}
+	//	}
+
+	//	if (_description[i].find("assign") != std::string::npos) //look for the word assing
+	//	{
+	//		std::istringstream _stream_temp(_description[i]); //save the line in a stream
+	//		_stream_temp >> temp; //save the sentence divided by space in a temporary value
+
+	//		if (temp.compare("assign") == 0) //if the word input is written correct then it saves the position
+	//		{
+	//			_positionAssign.push_back(i);
+	//		}
+
+	//		else
+	//		{
+	//			std::cerr << "ERROR: syntax error at line " << i + 1 << std::endl;
+	//			isOk = false;
+	//		}
+	//	}
+
+	//	if (_description[i].find("clk") != std::string::npos) //look for the word clock 
+	//	{
+
+	//		std::istringstream _stream_temp(_description[i]); //save the line in a stream
+	//		_stream_temp >> temp; //save the sentence divided by space in a temporary value
+
+	//		if (temp.compare("clk") == 0) //if the word input is written correct then it saves the position
+	//		{
+	//			_positionClk.push_back(i);
+	//		}
+
+	//		else
+	//		{
+	//			std::cerr << "ERROR: syntax error at line " << i + 1 << std::endl;
+	//			isOk = false;
+	//		}
+	//	}
+
+	//	if (_description[i].find("(") != std::string::npos)
+	//	{
+	//		_positionOpenBracket.push_back(i);
+	//	}
+
+	//	if (_description[i].find(")") != std::string::npos) //look for a closed bracket in each line
+	//	{
+	//		_positionCloseBracket.push_back(i); //save the position of the closed bracket
+	//	}
+
+	//	if (_description[i].find("FF") != std::string::npos)//look for a flipflop
+	//	{
+	//		std::istringstream _stream_temp(_description[i]); //save the line in a stream
+	//		std::string _flipFlop;
+
+	//		_stream_temp >> temp; //save the first word in a temporary value that should be FF number
+	//		_flipFlop = temp;
+
+	//		for (int j = 0; j < _flipFlop.length() - 2; j++)
+	//		{
+	//			if (_flipFlop[0] == 'F' && _flipFlop[1] == 'F' && isdigit(_flipFlop[j + 2]) != 0)
+	//				//the first and the second words have to be F and then just numbers
+	//			{
+	//				_positionFF.push_back(i);
+	//				isOk = true;
+	//			}
+
+	//			else
+	//			{
+	//				isOk = false;
+	//				std::cerr << "ERROR: syntax error at line " << i + 1 << std::endl;
+	//			}
+	//		}
+	//	}
+	//}
 
 	if (_positionEndmodule.size() == 0) //there are no endmodule
 	{
@@ -409,21 +511,130 @@ bool check_circuitDescr()
 	return isOk;
 }
 
-//SAVE THE INPUT'S AND OUTPUT'S SIGNALS
-void save_Signals() {
-	if (check_circuitDescr) //if there are no mistakes in the file
-	{
-		for (int i = 0; i < _positionInput.size(); i++)
-		{
-			for (int j = _positionInput[i]; j < _description.size(); j++)
-			{
-				std::istringstream _stream_temp(_description[j]);
-				std::string _temp;
-				while (_stream_temp >> _temp) //divide the string when it finds a space
-				{
 
+bool checkInput(std::vector <std::string> & _to_check) {
+	bool okay=true;
+	
+	for (int i = 0; i < _to_check.size(); i++)
+	{
+		for (int j = 0; j <_to_check[i].length(); j++)//for each string that contains input
+		{
+			//input can contains just letters, numbers, commas and square brackets
+			if (isdigit(_to_check[i][j])==0 && isalpha(_to_check[i][j])==0 && _to_check[i][j]!=',' && _to_check[i][j]!='[' && _to_check[i][j]!=']' && _to_check[i][j]!=' ' && _to_check[i][j]!='\t')
+			{
+				std::cerr << "ERROR: the input is not formatted correctly" << std::endl;
+				okay = false;
+			}
+		}
+	}
+	for (int i = 0; i < _to_check.size(); i++)
+	{
+		for (int j = 0; j < _to_check[i].length(); j++)
+		{
+			int length;
+			length = _to_check[i].length() - 1;
+			if (okay)
+			{
+				//after a comma there has to be a space and inside the brackets there has to be a number
+				if (_to_check[i][j] == ',' && _to_check[i][j + 1] != ' ')
+				{
+					std::cerr << "ERROR: no space found after the comma" << std::endl;
+					okay= false;
+				}
+				else if (_to_check[i][j] == '[' && isdigit(_to_check[i][j + 1]) == 0 && _to_check[i][j + 2] == ']')
+				{
+					std::cerr << "ERROR: there is inside the square brackets an unallowed character" << std::endl;
+					okay = false;
+				}
+				else if (_to_check[i][j] == '[' && _to_check[i][j+1] == ']')
+				{
+					std::cerr << "ERROR: no number found inside the square brackets" << std::endl;
+					okay = false;
+				}
+				//DA RIFARE
+				/*else if (isalpha(_to_check[i][length]) != 0 || _to_check[i][length] != ' ' || _to_check[i][length] !=']')
+				{
+					std::cerr << "the input's string doesn't end correctly" << std::endl;
+					okay = false;
+				}*/
+			}
+
+		}
+	}
+	return okay;
+}
+
+bool checkOutput(std::vector <std::string> & _to_check) 
+{
+	bool okay=true;
+	for (int i = 0; i < _to_check.size(); i++)
+	{
+
+		for (int j = 0; j < _to_check[i].length(); j++)//for each string that contains input
+		{
+			//output can just contain letters and commas
+			if (isalpha(_to_check[i][j]) == 0 && _to_check[i][j] != ',' &&  _to_check[i][j] != ' ' && _to_check[i][j] != '\t')
+			{
+				std::cerr << "ERROR: the output is not formatted correctly" << std::endl;
+				okay = false;
+			}
+			if (_to_check[i][j] == ',' && _to_check[i][j + 1] != ' ')
+			{
+				std::cerr << "no space found after the comma" << std::endl;
+				okay = false;
+			}
+
+			//DA RIFARE
+			////there has to be a comma after an output
+			//if (isalpha(_to_check[i][j])!=0 && _to_check[i][j+1]!=',' && _to_check[i][j - 1] == ' ' && _to_check[i][j + 2] == ' ')
+			//{
+			//	std::cerr << "no comma found after the output's signal" << std::endl;
+			//	okay = false;
+			//}
+			////output's string has to end with a character or a space
+			//if (isalpha(_to_check[i][_to_check[i].length()-1]) != 0 || _to_check[i][_to_check[i].length()-1] != ' ')
+			//{
+			//	std::cerr << "ERROR: the output's string doesn't end correctly" << std::endl;
+			//	okay = false;
+			//}
+		}
+	}
+	return okay;
+}
+
+bool checkAssign(std::vector <std::string> & _to_check) {
+	bool okay = true;
+	for (int i = 0; i < _to_check.size(); i++)
+	{
+		for (int j = 0; j < _to_check[i].length(); j++)//for each string that contains input
+		{
+			//input can contains just letters, numbers, commas and square brackets
+			if (isalpha(_to_check[i][j]) == 0 && _to_check[i][j] != '(' && _to_check[i][j] != ')' && _to_check[i][j] != ' ' && _to_check[i][j] != '\t' && _to_check[i][j]!='=')
+			{
+				okay = false;
+			}
+
+			else //there are no unwanted characters
+			{
+				//the string has to have spaces before the opened brackets and after the closed brackets
+				if( (_to_check[i][j]=='(' && _to_check[i][j-1]!=' ') || (_to_check[i][j]==')' && _to_check[i][j+1]!=' '))
+				{
+					okay = false;
 				}
 			}
+		}
+	}
+	return okay;
+}
+
+void checkSignals() {
+	bool valid = true;
+	if (check_circuitDescr)
+	{
+		valid = checkOutput(all_output);
+		if (valid==false)
+		{
+			std::cout << "errore";
 		}
 	}
 }

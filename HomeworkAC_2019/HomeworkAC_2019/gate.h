@@ -56,7 +56,6 @@ public:
 class NOT : public gate {
 private:
 	signal_input signal_in;
-
  public:
 	NOT(const signal_input &_signal_in);
 };

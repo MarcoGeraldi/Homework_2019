@@ -51,48 +51,77 @@ signal_output solve(const vector < string > &_toSolve) {
 	signal_input sig2;
 	signal_output out;
 
-	//if are already solved or are directly numbers
-	if (isdigit(_toSolve[0][0]))
+	//there is NOT in the sente
+	if (_toSolve.size()==2)
 	{
-		//cout << "Left signal is bool " << _toSolve[0] << endl;
-		sig1.Set(_toSolve[0]);
-
-	}
-
-	if (isdigit(_toSolve[2][0]))
-	{
-		//cout << "right signal is bool " << _toSolve[2] << endl;
-		sig2.Set(_toSolve[2]);
-	}
-
-	for (size_t i = 0; i < signals.size(); i++)
-	{
-		// if they are input signals
-		if (signals[i].getLabel() == _toSolve[0])
+		//if are already solved or are directly numbers
+		if (isdigit(_toSolve[1][0]))
 		{
-			//cout << "Left signal is char " << signals[i].Read() << endl;
-			sig1.Set(signals[i].Read());
+			//cout << "right signal is bool " << _toSolve[1] << endl;
+			sig1.Set(_toSolve[1]);
 		}
 
-		if (signals[i].getLabel() == _toSolve[2])
+		for (size_t i = 0; i < signals.size(); i++)
 		{
-			//cout << "right signal is char " << signals[i].Read() << endl;
-			sig2.Set(signals[i].Read());
+			// if they are input signals
+			if (signals[i].getLabel() == _toSolve[1])
+			{
+				//cout << "right signal is char " << signals[i].Read() << endl;
+				sig1.Set(signals[i].Read());
+			}
+
 		}
 
-
+		if (_toSolve[0] == "NOT") { NOT not_gate(sig1);	out.Set(not_gate.Read()); }
+		
 	}
+	//there are boolean operators except NOT
+	else
+	{
+		//if are already solved or are directly numbers
+		if (isdigit(_toSolve[0][0]))
+		{
+			//cout << "Left signal is bool " << _toSolve[0] << endl;
+			sig1.Set(_toSolve[0]);
 
-	vector<signal_input> sig;
-	sig.push_back(sig1);
-	sig.push_back(sig2);
+		}
 
-	if (_toSolve[1] == "AND")	{ AND and_gate(sig);	out.Set(	and_gate.Read()		); }
-	if (_toSolve[1] == "OR")	{ OR or_gate(sig);		out.Set(	or_gate.Read()		); }
-	if (_toSolve[1] == "NOR")	{ NOR nor_gate(sig);	out.Set(	nor_gate.Read()		); }
-	if (_toSolve[1] == "XOR")	{ XOR xor_gate(sig);	out.Set(	xor_gate.Read()		); }
-	if (_toSolve[1] == "NAND")	{ NAND nand_gate(sig);	out.Set(	nand_gate.Read()	); }
-	if (_toSolve[1] == "XNOR")	{ XNOR xnor_gate(sig);	out.Set(	xnor_gate.Read()	); }
+		if (isdigit(_toSolve[2][0]))
+		{
+			//cout << "right signal is bool " << _toSolve[2] << endl;
+			sig2.Set(_toSolve[2]);
+		}
+
+		for (size_t i = 0; i < signals.size(); i++)
+		{
+			// if they are input signals
+			if (signals[i].getLabel() == _toSolve[0])
+			{
+				//cout << "Left signal is char " << signals[i].Read() << endl;
+				sig1.Set(signals[i].Read());
+			}
+
+			if (signals[i].getLabel() == _toSolve[2])
+			{
+				//cout << "right signal is char " << signals[i].Read() << endl;
+				sig2.Set(signals[i].Read());
+			}
+
+
+		}
+
+		vector<signal_input> sig;
+		sig.push_back(sig1);
+		sig.push_back(sig2);
+
+		if (_toSolve[1] == "AND") { AND and_gate(sig);	out.Set(and_gate.Read()); }
+		if (_toSolve[1] == "OR") { OR or_gate(sig);		out.Set(or_gate.Read()); }
+		if (_toSolve[1] == "NOR") { NOR nor_gate(sig);	out.Set(nor_gate.Read()); }
+		if (_toSolve[1] == "XOR") { XOR xor_gate(sig);	out.Set(xor_gate.Read()); }
+		if (_toSolve[1] == "NAND") { NAND nand_gate(sig);	out.Set(nand_gate.Read()); }
+		if (_toSolve[1] == "XNOR") { XNOR xnor_gate(sig);	out.Set(xnor_gate.Read()); }
+	}
+	
 	/*
 	std::cout << "sig1: " << sig1.Read() << std::endl
 		<< "sig2: " << sig2.Read() << std::endl
@@ -115,7 +144,9 @@ string getSig(const string & inputString) {
 	int counterClose = 0;
 	int flag = 0;
 
+	//there are bracktes left
 	if (positionOpen.size() != 0 && positionClose.size() != 0) {
+
 		while (counterOpen < positionOpen.size() - 1 && flag == 0)
 		{
 			//find the inner brackets
@@ -136,12 +167,14 @@ string getSig(const string & inputString) {
 		vector<string> tokens;
 		string token;
 
-		while (getline(ss, token, ' ')) //divide the string by space
+		 //divide the string by spaces
+		while (getline(ss, token, ' '))
 		{
 			tokens.push_back(token);
 		}
 
-		signal_output t_out = solve(tokens); //solve the sentence
+		//solve the sentence
+		signal_output t_out = solve(tokens); 
 
 		stringstream s_out;
 		s_out << t_out.Read();
