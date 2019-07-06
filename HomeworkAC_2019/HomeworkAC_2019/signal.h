@@ -2,6 +2,8 @@
 #include <string>
 #include <sstream>
 
+//#include "btree.hpp"
+
 //SIGNAL CLASS:
 
 /*
@@ -46,7 +48,13 @@ class signal_output : public signal
 {
 public:
 	signal_output( const std::string &_label,  const bool &_value = 0);
+	//signal_output(const std::string &_label, const std::string & _to_parse);
 	signal_output();
+	
+private:
+	/*std::string to_parse;
+	btree *head;
+	std::vector <std::string> pathMin, pathMax, coni_Logici;*/
 };
  
 //input signal

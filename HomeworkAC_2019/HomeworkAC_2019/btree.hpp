@@ -49,7 +49,7 @@ che contiene l'indirizzo del nodo a cui devo puntare e che aggiorno ogni volta (
 parto sempre dalla parentesi più interna partendo da sx e poi a andando a dx nel caso
 */
 
-btree * builtTree(std::string & _input_string) {
+btree * builtTree(const std::string & _input_string) {
 
 	std::string new_input = _input_string;
 	btree * head = nullptr;
@@ -343,13 +343,13 @@ btree* returnParent(btree * _node) {
 	return _node->parent;
 }
 
+std::vector <calculatepath> allpaths;
 int counterpath = 0;
 int flag = 0;
-std::vector <calculatepath> allpaths;
 
 vector <calculatepath> Path(btree * _node){
 
-	calculatepath temp;
+		calculatepath temp;
 
 		//the tree is empty
 		if (_node == NULL)
@@ -416,73 +416,122 @@ vector <calculatepath> Path(btree * _node){
 				return allpaths;
 			}
 		}
-		//provare se funziona perchè ho aggiunto questo return sotto
-		return allpaths;
 }
 
 
-vector <string> findMin(std::string & _input) {
+void delete_tree(btree *_node) {
+	btree *temp;
+	if (_node==NULL) //the tree was deleted
+	{
+		return;
+	}
+	//the node is not a leaf but it's a parent of two children
+	if (_node->left!=NULL && _node->right!=NULL)
+	{
+		delete_tree(_node->left);
+		return;
+	}
+	//the node is a leaf so it can be deleted
+	if (_node->left==NULL && _node->right==NULL)
+	{
+		temp = _node->parent;
+		
+		if (temp==NULL) //found the root
+		{
+			delete _node;
+			return;
+		}
+		//in order to understand which children is going to be deleted
+		if (temp->left==_node)
+		{
+			delete _node;
+			temp->left = NULL;
+			delete_tree(temp);
+			return;
+		}
+		if (temp->right==_node)
+		{
+			delete _node;
+			temp->right = NULL;
+			delete_tree(temp);
+			return;
+		}
+	}
+	//the node just has the left child
+	if (_node->left!=NULL && _node->right==NULL)
+	{
+		delete_tree(_node->left);
+		return;
+	}
+	//the node just has the right child
+	if (_node->left==NULL && _node->right!=NULL)
+	{
+		delete_tree(_node->right);
+		return;
+	}
+	return;
+}
+
+void createDeleteTree(std::string & _input){
+
 	btree * head;
 	head = builtTree(_input);
-	vector <calculatepath> _to_find;
-	_to_find = Path(head);
+	Path(head);
+	delete_tree(head);
+}
+
+vector <string> findMin() {
+
 	vector<int> save_path;
 	vector <string> min_input;
 
-	for (int i = 0; i <_to_find.size(); i++)
+	for (int i = 0; i <allpaths.size(); i++)
 	{
-		save_path.push_back(_to_find[i].path);
+		save_path.push_back(allpaths[i].path);
 	}
 	//sort the path in order to find the min
 	std::sort(save_path.begin(), save_path.end());
 
-	for (int i = 0; i < _to_find.size(); i++)
+	for (int i = 0; i < allpaths.size(); i++)
 	{
-		if (_to_find[i].path==save_path[0])
+		if (allpaths[i].path==save_path[0])
 		{
-			min_input.push_back(_to_find[i].label);
+			min_input.push_back(allpaths[i].label);
 		}
 	}
 	return min_input;
 }
 
-vector <string> findMax(std::string & _input) {
-	btree * head;
-	head = builtTree(_input);
-	vector <calculatepath> _to_find;
-	_to_find = Path(head);
+vector <string> findMax() {
+	
 	vector<int> save_path;
 	vector <string> max_output;
 
-	for (int i = 0; i < _to_find.size(); i++)
+	for (int i = 0; i < allpaths.size(); i++)
 	{
-		save_path.push_back(_to_find[i].path);
+		save_path.push_back(allpaths[i].path);
 	}
 	//sort the vector so the last element is the biggest
 	std::sort(save_path.begin(), save_path.end());
 
-	for (int i = 0; i < _to_find.size(); i++)
+	for (int i = 0; i < allpaths.size(); i++)
 	{
-		if (_to_find[i].path==save_path[save_path.size()-1])
+		if (allpaths[i].path==save_path[save_path.size()-1])
 		{
-			max_output.push_back(_to_find[i].label);
+			max_output.push_back(allpaths[i].label);
 		}
 	}
-	std::cout << "size find: " << _to_find.size() << " " << " size di max" << max_output.size() << endl;
 	
 	return max_output;
 }
 
-vector <string> coniLogici(std::string & _input) {
-	btree * head;
-	head = builtTree(_input);
-	vector <calculatepath> _to_find;
-	_to_find = Path(head);
+vector <string> coniLogici() {
+	
 	vector <string> input;
 	
-	for (int i = 0; i < _to_find.size(); i++)
+	for (int i = 0; i < allpaths.size(); i++)
 	{
-		input.push_back(_to_find[i].label);
+		input.push_back(allpaths[i].label);
 	}
 	
 	return input;

@@ -1,5 +1,5 @@
-module NOME_CIRCUITO_COMB(
-	input a, b[44]
+module NOME(
+	input a, b[2]
 	input c 
 	output x, y
 );
@@ -7,13 +7,12 @@ assign x = c OR (a AND b)
 assign y = NOT c
 endmodule
 
-module NOME_CIRCUITO_COMB(
+module NOME_CIRCUITO_COMB2(
 clk
 	input e, d
-	output c, M
+	output c
 	input m
 );
 
-assign x 
-FF5 
+assign c= e NAND (NOT d)
 endmodule

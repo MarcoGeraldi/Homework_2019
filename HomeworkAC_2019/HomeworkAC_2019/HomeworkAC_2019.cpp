@@ -3,52 +3,28 @@
 // Marco Geraldi	<248825>
 // Margherita Gili	<249774>
 
+/*
+TO DO LIST:
+-creare un classe circuito combinatorio, sequenziale e combinato in grado di gestire un circuito.
+la classe deve contenere input, output, path min e max, coni logici, se è sequenziale e se è composto.
+
+-salvare i dati e finire i controlli su file, sulla stringa per il parser
+
+-aggiungere analisi di potenza da aggiungere al parser, ogni gate deve avere un vettore che tiene memoria degli output
+
+-
+*/
+
 #include "HomeworkAC_2019.h"
-#include "signal.h"
-#include "gate.h"
-#include "filecheck.hpp"
-#include "btree.hpp"
 
 int main(){ 
 	
-	string input = "(a AND (NOT b)) OR (c XOR (NOT (e NAND d)))";
-	//cout << getValue(input);
-	//cout << "value is " << getValue(input) << endl;
-/*
+	//string input = "(a OR (NOT c)) AND (NOT (b NAND (NOT d)))";
+	
 	filename_circuitDescr = "descrizione.txt";
-	check_circuitDescr();
-	checkSignals();*/
+	checkSignals();
 
-	/*btree * head;
-	head= builtTree(input);
-	std::cout << "testa:" << head->value << std::endl
-		<< "genitore di OR:" << head->right->right->right->parent->value << endl
-		<< "genitore di a: " << head->left->parent->value << endl
-		<< "genitore di AND: " << head->right->right->parent->value << endl;*/
-	/*std::vector <calculatepath> cammino;
-	btree *head;
-	head = builtTree(input);
-	cammino = Path(head);*/
-
-	//vector <string> c, min, max;
-	/*c = coniLogici(input);
-	for (int i = 0; i < c.size(); i++)
-	{
-		std::cout << "gli input associati all'output sono: "
-			<< c[i] << std::endl;
-	}*/
-	//min = findMin(input);
-	//max = findMax(input);
-	/*for (int i = 0; i < min.size(); i++)
-	{
-		std::cout << "gli input con percorso minore sono: "
-			<< min[i] << std::endl;
-	}*/
-	/*for (int i = 0; i < max.size(); i++)
-	{
-		std::cout << "gli input con percorso maggiore sono: "
-			<< max[i] << std::endl;
-	}*/
+	 
 	return 0;
 }
 

@@ -38,6 +38,17 @@ signal_output::signal_output(const std::string & _label, const bool & _value)
 	this->kind = SIGNAL_OUTPUT;
 }
 
+//signal_output::signal_output(const std::string & _label, const std::string & _to_parse)
+//{
+//	this->label = _label;
+//	this->to_parse = _to_parse;
+//	this->head = builtTree(_to_parse);
+//	Path(head);
+//	this->pathMin = findMin();
+//	this->pathMax = findMax();
+//	this->coni_Logici = coniLogici();
+//}
+
 signal_output::signal_output()
 {
 	this->label = 'X';

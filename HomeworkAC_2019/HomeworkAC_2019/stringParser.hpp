@@ -122,11 +122,6 @@ signal_output solve(const vector < string > &_toSolve) {
 		if (_toSolve[1] == "XNOR") { XNOR xnor_gate(sig);	out.Set(xnor_gate.Read()); }
 	}
 	
-	/*
-	std::cout << "sig1: " << sig1.Read() << std::endl
-		<< "sig2: " << sig2.Read() << std::endl
-		<< "out: " << out.Read() << std::endl;
-	*/
 
 	return out;
 }

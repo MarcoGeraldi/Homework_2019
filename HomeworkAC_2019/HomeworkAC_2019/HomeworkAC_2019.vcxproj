@@ -151,6 +151,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="circuit.cpp" />
     <ClCompile Include="flipflop.cpp" />
     <ClCompile Include="gate.cpp" />
     <ClCompile Include="HomeworkAC_2019.cpp" />
@@ -158,9 +159,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="btree.hpp" />
+    <ClInclude Include="circuit.h" />
     <ClInclude Include="filecheck.hpp" />
     <ClInclude Include="flipflop.h" />
     <ClInclude Include="gate.h" />
+    <ClInclude Include="getFiledata.hpp" />
     <ClInclude Include="HomeworkAC_2019.h" />
     <ClInclude Include="signal.h" />
     <ClInclude Include="stringParser.hpp" />
