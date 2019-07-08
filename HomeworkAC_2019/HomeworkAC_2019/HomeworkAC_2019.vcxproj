@@ -151,22 +151,25 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="circuit.cpp" />
     <ClCompile Include="flipflop.cpp" />
     <ClCompile Include="gate.cpp" />
     <ClCompile Include="HomeworkAC_2019.cpp" />
+    <ClCompile Include="menu.cpp" />
     <ClCompile Include="signal.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="btree.hpp" />
-    <ClInclude Include="circuit.h" />
+    <ClInclude Include="btree.hpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="filecheck.hpp" />
     <ClInclude Include="flipflop.h" />
     <ClInclude Include="gate.h" />
-    <ClInclude Include="getFiledata.hpp" />
     <ClInclude Include="HomeworkAC_2019.h" />
+    <ClInclude Include="menu.h" />
     <ClInclude Include="signal.h" />
-    <ClInclude Include="stringParser.hpp" />
+    <ClInclude Include="stringParser.hpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="descrizione.txt" />

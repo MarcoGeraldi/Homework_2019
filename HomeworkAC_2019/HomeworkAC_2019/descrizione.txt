@@ -14,5 +14,5 @@ clk
 	input m
 );
 
-assign c= e NAND (NOT d)
+assign c = e NAND (NOT d)
 endmodule

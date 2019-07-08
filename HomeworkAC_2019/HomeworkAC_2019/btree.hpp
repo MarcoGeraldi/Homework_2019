@@ -1,19 +1,47 @@
 #pragma once
-#include "stringParser.hpp"
-#include <algorithm>
+
+#include <algorithm> //sort
+#include <iostream>
+#include <vector>
+#include <sstream>
 
 
-struct calculatepath {
+ struct calculatepath {
 	int path;
-	string label;
+	std::string label;
 };
 
-
-struct btree {
+ struct btree {
 	std::string value;
 	char colour = 'B'; //da cambiare in white and black
 	btree * left, *right, *parent;
 };
+
+ std::vector <calculatepath> allpaths;
+ int counterpath = 0;
+ int flag = 0;
+
+
+//returns position of occurrencies
+std::vector<int> get_Positions(const std::string &_inputString, const std::string &to_find) {
+
+	std::vector <int> positions;
+	//positions.clear();
+
+	bool found = false;
+
+	for (size_t i = 0; i < _inputString.length(); i++)
+	{
+		if (_inputString.substr(i, to_find.length()) == to_find)
+		{
+			found = true;
+			positions.push_back(i);
+		}
+
+	}
+
+	return positions;
+}
 
 btree * newNode(std::string & _value_to_assign) {
 	btree * temp = new btree;
@@ -53,12 +81,12 @@ btree * builtTree(const std::string & _input_string) {
 
 	std::string new_input = _input_string;
 	btree * head = nullptr;
-	vector<size_t> positionOpenB;
-	vector<size_t> positionCloseB;
-	vector <btree *> special;
+	std::vector<int> positionOpenB;
+	std::vector<int> positionCloseB;
+	std::vector <btree *> special;
 
 	//get how many brackets are in the initial sentence in order to know how many times the tree's code has to run
-	int innerCounter = getPositions(_input_string, "(").size();
+	int innerCounter = get_Positions(_input_string, "(").size();
 	
 	//need the special character to highlight the place where there was a bracket before
 	std::string special_character = "*";
@@ -67,19 +95,19 @@ btree * builtTree(const std::string & _input_string) {
 	for (int i = 0; i < innerCounter+1; i++)
 	{
 		//everytime the string newinput is upload and need to know how many brackets are in there
-		positionOpenB = getPositions(new_input, "(");
-		positionCloseB = getPositions(new_input, ")");
+		positionOpenB = get_Positions(new_input, "(");
+		positionCloseB = get_Positions(new_input, ")");
 
-		int counterOpen = 0;
+		size_t counterOpen = 0;
 		int counterClose = 0;
 		int flag = 0;
 
 		//there are no brackets so the tree is almost finished, only the roots is missing
 		if (positionOpenB.size() == 0 || positionCloseB.size() == 0) 
 		{
-			istringstream stream_temp(new_input);
+			std::istringstream stream_temp(new_input);
 			std::string string_temp;
-			vector <std::string> vect_temp;
+			std::vector <std::string> vect_temp;
 
 			//divide the sentence by spaces
 			while (getline(stream_temp, string_temp,' '))
@@ -189,11 +217,11 @@ btree * builtTree(const std::string & _input_string) {
 			}
 
 			//take the sentence inside the brackets
-			string s = new_input.substr(positionOpenB[counterOpen] + 1, positionCloseB[counterClose] - positionOpenB[counterOpen] - 1);
+			std::string s = new_input.substr(positionOpenB[counterOpen] + 1, positionCloseB[counterClose] - positionOpenB[counterOpen] - 1);
 			
-			stringstream stream_temp(s);
-			vector<string> vect_temp;
-			string string_temp;
+			std::stringstream stream_temp(s);
+			std::vector<std::string> vect_temp;
+			std::string string_temp;
 
 			//divide the string by spaces
 			while (getline(stream_temp, string_temp, ' '))
@@ -343,11 +371,7 @@ btree* returnParent(btree * _node) {
 	return _node->parent;
 }
 
-std::vector <calculatepath> allpaths;
-int counterpath = 0;
-int flag = 0;
-
-vector <calculatepath> Path(btree * _node){
+std::vector <calculatepath> Path(btree * _node){
 
 		calculatepath temp;
 
@@ -416,8 +440,8 @@ vector <calculatepath> Path(btree * _node){
 				return allpaths;
 			}
 		}
+		return allpaths;
 }
-
 
 void delete_tree(btree *_node) {
 	btree *temp;
@@ -472,66 +496,66 @@ void delete_tree(btree *_node) {
 	return;
 }
 
-void createDeleteTree(std::string & _input){
+//void createDeleteTree(std::string & _input){
+//
+//	btree * head;
+//	head = builtTree(_input);
+//	Path(head);
+//	delete_tree(head);
+//}
 
-	btree * head;
-	head = builtTree(_input);
-	Path(head);
-	delete_tree(head);
-}
+std::vector <std::string> findMin(const std:: vector <calculatepath> &to_calculate) {
 
-vector <string> findMin() {
+	std::vector<int> save_path;
+	std::vector <std::string> min_input;
 
-	vector<int> save_path;
-	vector <string> min_input;
-
-	for (int i = 0; i <allpaths.size(); i++)
+	for (size_t i = 0; i <to_calculate.size(); i++)
 	{
-		save_path.push_back(allpaths[i].path);
+		save_path.push_back(to_calculate[i].path);
 	}
 	//sort the path in order to find the min
 	std::sort(save_path.begin(), save_path.end());
 
-	for (int i = 0; i < allpaths.size(); i++)
+	for (size_t i = 0; i < to_calculate.size(); i++)
 	{
-		if (allpaths[i].path==save_path[0])
+		if (to_calculate[i].path==save_path[0])
 		{
-			min_input.push_back(allpaths[i].label);
+			min_input.push_back(to_calculate[i].label);
 		}
 	}
 	return min_input;
 }
 
-vector <string> findMax() {
+std::vector <std::string> findMax(const std::vector<calculatepath> &_to_calculate) {
 	
-	vector<int> save_path;
-	vector <string> max_output;
+	std::vector<int> save_path;
+	std::vector <std::string> max_output;
 
-	for (int i = 0; i < allpaths.size(); i++)
+	for (size_t i = 0; i < _to_calculate.size(); i++)
 	{
-		save_path.push_back(allpaths[i].path);
+		save_path.push_back(_to_calculate[i].path);
 	}
 	//sort the vector so the last element is the biggest
 	std::sort(save_path.begin(), save_path.end());
 
-	for (int i = 0; i < allpaths.size(); i++)
+	for (size_t i = 0; i < _to_calculate.size(); i++)
 	{
-		if (allpaths[i].path==save_path[save_path.size()-1])
+		if (_to_calculate[i].path==save_path[save_path.size()-1])
 		{
-			max_output.push_back(allpaths[i].label);
+			max_output.push_back(_to_calculate[i].label);
 		}
 	}
 	
 	return max_output;
 }
 
-vector <string> coniLogici() {
+std::vector <std::string> coniLogici(const std::vector <calculatepath> &_to_calculate) {
 	
-	vector <string> input;
+	std::vector <std::string> input;
 	
-	for (int i = 0; i < allpaths.size(); i++)
+	for (size_t i = 0; i < _to_calculate.size(); i++)
 	{
-		input.push_back(allpaths[i].label);
+		input.push_back(_to_calculate[i].label);
 	}
 	
 	return input;

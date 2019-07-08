@@ -1,19 +1,17 @@
-#include <iostream>
-#include <sstream>
-#include <string>
+#pragma once
+  
 #include <fstream>
+#include <sstream>
+#include <iostream>
 #include <vector>
 #include "signal.h"
+
 
 std::string filename_inputSignal;
 std::string filename_circuitDescr;
 std::fstream stream_inputSignal;
 std::fstream stream_circuitDescr;
 
-std::vector <std::string> _description;
-
-std::vector < std::vector <signal_input>> matrix_input;
-std::vector < std::vector <signal_output>> matrix_output;
 std::vector <std::string> all_input, all_output, all_assign, all_FF, all_instance, all_name;
 
 std::vector <int> _positionEndmodule, _positionModule;
@@ -153,7 +151,7 @@ bool check_circuitDescr()
 				std::string t_name;
 				int m_tPos = line.find("module");
 				int p_tPos = line.find("(");
-				t_name = line.substr(m_tPos+7 , p_tPos - (m_tPos+6));//save the name after module and before the open bracket
+				t_name = line.substr(m_tPos+7 , p_tPos - (m_tPos+7));//save the name after module and before the open bracket
 
 				all_name.push_back(t_name); //save the name
 			}
@@ -191,7 +189,7 @@ bool check_circuitDescr()
 			_stream_temp >> temp; //save the first word in a temporary value that should be FF number
 			_flipFlop = temp;
 
-			for (int j = 0; j < _flipFlop.length() - 2; j++)
+			for (size_t j = 0; j < _flipFlop.length() - 2; j++)
 			{
 				if (_flipFlop[0] == 'F' && _flipFlop[1] == 'F' && isdigit(_flipFlop[j + 2]) != 0)
 					//the first and the second words have to be F and then just numbers
@@ -288,7 +286,7 @@ bool check_circuitDescr()
 	{
 		//isSequential.resize(_positionEndmodule.size()); //it has to be as big as many circuits are in t
 
-		for (int i = 0; i < _positionModule.size(); i++) 
+		for (size_t i = 0; i < _positionModule.size(); i++) 
 		{
 			if (_positionModule[i]>_positionEndmodule[i]  ) //module has to be before endmodule
 			{
@@ -310,7 +308,7 @@ bool check_circuitDescr()
 			{
 				int innerCounter = 0;
 
-				for (int counterClk = 0; counterClk < _positionClk.size(); counterClk++)
+				for (size_t counterClk = 0; counterClk < _positionClk.size(); counterClk++)
 				{
 					if (_positionClk[counterClk] > _positionModule[i] && _positionClk[counterClk]<_positionEndmodule[i]) //for each circuit
 					{
@@ -330,7 +328,7 @@ bool check_circuitDescr()
 				}
 			}
 
-			for (int counterInput=0		; counterInput		<	_positionInput.size();		counterInput++)
+			for (size_t counterInput=0		; counterInput		<	_positionInput.size();		counterInput++)
 			{
 				if (_positionInput[counterInput]>_positionModule[i] &&_positionInput[counterInput]<_positionEndmodule[i]) //for each circuit
 				{
@@ -345,7 +343,7 @@ bool check_circuitDescr()
 				}
 			}
 
-			for (int counterOutput=0	; counterOutput		<	 _positionOutput.size();	counterOutput++)
+			for (size_t counterOutput=0	; counterOutput		<	 _positionOutput.size();	counterOutput++)
 			{
 				if (_positionOutput[counterOutput]>_positionModule[i] &&_positionOutput[counterOutput] < _positionEndmodule[i]) //for each circuit
 				{
@@ -360,7 +358,7 @@ bool check_circuitDescr()
 				}
 			}
 			
-			for (int counterAssign=0	; counterAssign		<	 _positionAssign.size();	counterAssign++)
+			for (size_t counterAssign=0	; counterAssign		<	 _positionAssign.size();	counterAssign++)
 			{
 				if (_positionAssign[counterAssign] > _positionModule[i] &&_positionAssign[counterAssign] < _positionEndmodule[i])//for each circuit
 				{
@@ -374,7 +372,7 @@ bool check_circuitDescr()
 					}
 				}
 			}
-			for (int counterFF = 0; counterFF < _positionFF.size(); counterFF++)
+			for (size_t counterFF = 0; counterFF < _positionFF.size(); counterFF++)
 			{
 				if (_positionFF[counterFF] > _positionModule[i] && _positionFF[counterFF] < _positionEndmodule[i])//for each circuit
 				{
@@ -396,9 +394,9 @@ bool check_circuitDescr()
 
 bool checkInput(std::vector <std::string> & _to_check) {
 
-	for (int i = 0; i < _to_check.size(); i++)
+	for (size_t i = 0; i < _to_check.size(); i++)
 	{
-		for (int j = 0; j <_to_check[i].length(); j++)//for each string that contains input
+		for (size_t j = 0; j <_to_check[i].length(); j++)//for each string that contains input
 		{
 			//input can contains just letters, numbers, commas and square brackets
 			if (isdigit(_to_check[i][j])==0 && isalpha(_to_check[i][j])==0 && _to_check[i][j]!=',' && _to_check[i][j]!='[' && _to_check[i][j]!=']' && _to_check[i][j]!=' ' && _to_check[i][j]!='\t')
@@ -410,7 +408,7 @@ bool checkInput(std::vector <std::string> & _to_check) {
 		}
 	}
 	
-	for (int i = 0; i < _to_check.size(); i++)
+	for (size_t i = 0; i < _to_check.size(); i++)
 	{		
 		std::string inputLine;
 		int position = _to_check[i].find("input");
@@ -425,7 +423,7 @@ bool checkInput(std::vector <std::string> & _to_check) {
 		}
 
 		//check each input
-		for (int k = 0; k < inputs.size(); k++)
+		for (size_t k = 0; k < inputs.size(); k++)
 		{
 			if (inputs[k] == " " || inputs[k] == "\t"  )
 			{
@@ -435,7 +433,7 @@ bool checkInput(std::vector <std::string> & _to_check) {
 
 			//if there is a space or tab in the input definition giva an error
 			std::vector < int >  t_pos ;		
-			for (int l = 0; l < inputs[k].length(); l++)
+			for (size_t l = 0; l < inputs[k].length(); l++)
 			{
 				if (isalpha(inputs[k][l]))
 				{ 
@@ -467,7 +465,7 @@ bool checkInput(std::vector <std::string> & _to_check) {
 				checkString = inputs[k].substr(positionSquare_open+1, positionSquare_close-positionSquare_open-1);
 				if (checkString.size() > 0)
 				{
-					for (int j = 0; j < checkString.size(); j++)
+					for (size_t j = 0; j < checkString.size(); j++)
 					{
 						if (isdigit(checkString[j]) == 0)
 						{
@@ -490,10 +488,10 @@ bool checkInput(std::vector <std::string> & _to_check) {
 bool checkOutput(std::vector <std::string> & _to_check) 
 {
 
-	for (int i = 0; i < _to_check.size(); i++)
+	for (size_t i = 0; i < _to_check.size(); i++)
 	{
 
-		for (int j = 0; j < _to_check[i].length(); j++)//for each string that contains output
+		for (size_t j = 0; j < _to_check[i].length(); j++)//for each string that contains output
 		{
 			//output can just contain letters and commas
 			if (isalpha(_to_check[i][j]) == 0 && _to_check[i][j] != ',' &&  _to_check[i][j] != ' ' && _to_check[i][j] != '\t')
@@ -504,7 +502,7 @@ bool checkOutput(std::vector <std::string> & _to_check)
 			
 		}
 
-		for (int i = 0; i < _to_check.size(); i++)
+		for (size_t i = 0; i < _to_check.size(); i++)
 		{
 			std::string outputLine;
 			int position = _to_check[i].find("output");
@@ -519,7 +517,7 @@ bool checkOutput(std::vector <std::string> & _to_check)
 			}
 
 			//check each output
-			for (int k = 0; k < outputs.size(); k++)
+			for (size_t k = 0; k < outputs.size(); k++)
 			{
 				if (outputs[k] == " " || outputs[k] == "\t")
 				{
@@ -529,7 +527,7 @@ bool checkOutput(std::vector <std::string> & _to_check)
 
 				//if there is a space or tab in the output definition giva an error
 				std::vector < int >  t_pos;
-				for (int l = 0; l < outputs[k].length(); l++)
+				for (size_t l = 0; l < outputs[k].length(); l++)
 				{
 					if (isalpha(outputs[k][l]))
 					{
@@ -551,9 +549,9 @@ bool checkOutput(std::vector <std::string> & _to_check)
 
 bool checkAssign(std::vector <std::string> & _to_check) {
 	bool okay = true;
-	for (int i = 0; i < _to_check.size(); i++)
+	for (size_t i = 0; i < _to_check.size(); i++)
 	{
-		for (int j = 0; j < _to_check[i].length(); j++)//for each string that contains input
+		for (size_t j = 0; j < _to_check[i].length(); j++)//for each string that contains input
 		{
 			//input can contains just letters, numbers, commas and square brackets
 			if (isalpha(_to_check[i][j]) == 0 && _to_check[i][j] != '(' && _to_check[i][j] != ')' && _to_check[i][j] != ' ' && _to_check[i][j] != '\t' && _to_check[i][j]!='=')

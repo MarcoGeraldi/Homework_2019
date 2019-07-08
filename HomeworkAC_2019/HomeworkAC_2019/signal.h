@@ -1,9 +1,8 @@
 #pragma once
-#include <string>
+ 
 #include <sstream>
-
-//#include "btree.hpp"
-
+#include <vector>
+#include <iostream>
 //SIGNAL CLASS:
 
 /*
@@ -47,14 +46,14 @@ public:
 class signal_output : public signal
 {
 public:
-	signal_output( const std::string &_label,  const bool &_value = 0);
-	//signal_output(const std::string &_label, const std::string & _to_parse);
+	signal_output(const std::string &_label,  const bool &_value = 0);
+	signal_output(const std::string &_label, const std::string &_to_parse, const bool &_value =0 );//to_parse: in order to get paths
 	signal_output();
-	
+
+	std::string getParse();
+
 private:
-	/*std::string to_parse;
-	btree *head;
-	std::vector <std::string> pathMin, pathMax, coni_Logici;*/
+	std::string to_parse;
 };
  
 //input signal

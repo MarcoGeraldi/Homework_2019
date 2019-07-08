@@ -1,24 +1,16 @@
 #pragma once
 
-#include "signal.h"
-#include "gate.h"
+#include "gate.h" 
 
-#include <string>
-#include <vector>  
-#include <iostream>
-#include <sstream>
-
-using namespace std;
-
-vector<size_t> positionOpen;
-vector<size_t> positionClose;
-vector<size_t> positionGate;
-vector<size_t> positionSignal;
+std::vector<size_t> positionOpen;
+std::vector<size_t> positionClose;
+std::vector<size_t> positionGate;
+std::vector<size_t> positionSignal;
 
 //returns position of occurrencies
-vector<size_t> getPositions(const string &_inputString, const string &to_find) {
+std::vector<size_t> getPositions(const std::string &_inputString, const std::string &to_find) {
 
-	vector <size_t> positions;
+	std::vector <size_t> positions;
 	//positions.clear();
 
 	bool found = false;
@@ -37,8 +29,8 @@ vector<size_t> getPositions(const string &_inputString, const string &to_find) {
 }
 
 //from a simple string, return output value
-signal_output solve(const vector < string > &_toSolve) {
-	vector <signal> signals;
+signal_output solve(const std::vector < std::string > &_toSolve) {
+	std::vector <signal> signals;
 	signal_input a("a", 1);
 	signal_input b("b", 1);
 	signal_input c("c", 0);
@@ -110,7 +102,7 @@ signal_output solve(const vector < string > &_toSolve) {
 
 		}
 
-		vector<signal_input> sig;
+		std::vector<signal_input> sig;
 		sig.push_back(sig1);
 		sig.push_back(sig2);
 
@@ -126,17 +118,17 @@ signal_output solve(const vector < string > &_toSolve) {
 	return out;
 }
 
-string getSig(const string & inputString) {
+std::string getSig(const std::string & inputString) {
 
-	string _inputString = inputString;
+	std::string _inputString = inputString;
 
 	//get the positions of opened and closed brackets
 	positionOpen = getPositions(_inputString, "(");
 	positionClose = getPositions(_inputString, ")");
 
 
-	int counterOpen = 0;
-	int counterClose = 0;
+	size_t counterOpen = 0;
+	size_t counterClose = 0;
 	int flag = 0;
 
 	//there are bracktes left
@@ -156,14 +148,14 @@ string getSig(const string & inputString) {
 		}
 
 		//take the sentence inside the brackets
-		string s = _inputString.substr(positionOpen[counterOpen] + 1, positionClose[counterClose] - positionOpen[counterOpen] - 1);
-
-		stringstream ss(s);
-		vector<string> tokens;
-		string token;
+		std::string s = _inputString.substr(positionOpen[counterOpen] + 1, positionClose[counterClose] - positionOpen[counterOpen] - 1);
+		
+		std::stringstream ss(s);
+		std::vector<std::string> tokens;
+		std::string token;
 
 		 //divide the string by spaces
-		while (getline(ss, token, ' '))
+		while(std::getline(ss, token, ' '))
 		{
 			tokens.push_back(token);
 		}
@@ -171,7 +163,7 @@ string getSig(const string & inputString) {
 		//solve the sentence
 		signal_output t_out = solve(tokens); 
 
-		stringstream s_out;
+		std::stringstream s_out;
 		s_out << t_out.Read();
 
 		//replace the inner bracket with the resolution of the boolean operator
@@ -184,18 +176,18 @@ string getSig(const string & inputString) {
 	}
 	else
 	{
-		stringstream ss(_inputString);
-		vector<string> tokens;
-		string token;
+		std::stringstream ss(_inputString);
+		std::vector<std::string> tokens;
+		std::string token;
 
-		while (getline(ss, token, ' ')) //divide the string by space
+		while (std::getline(ss, token, ' ')) //divide the string by space
 		{
 			tokens.push_back(token);
 		}
 
 		signal_output t_out = solve(tokens); //solve the sentence
 
-		stringstream s_out;
+		std::stringstream s_out;
 		s_out << t_out.Read();
 
 		_inputString.replace(_inputString.begin(), _inputString.end(), s_out.str());
@@ -204,12 +196,12 @@ string getSig(const string & inputString) {
 	}
 }
 
-int	getValue(const string & _input) {
+int	getValue(const std::string & _input) {
 
-	string input = _input;
+	std::string input = _input;
 	int counter_p = getPositions(input, "(").size();
 
-	for (size_t i = 0; i < counter_p + 1; i++)
+	for (int i = 0; i < counter_p + 1; i++)
 	{
 		input = getSig(input);
 		//cout << input << endl;

@@ -1,8 +1,6 @@
 #pragma once
 
 #include "signal.h"
-#include <vector>
-#include <iterator>
 
 //Generic Gate
 class gate{

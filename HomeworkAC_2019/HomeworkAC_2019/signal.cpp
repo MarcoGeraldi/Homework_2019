@@ -38,16 +38,14 @@ signal_output::signal_output(const std::string & _label, const bool & _value)
 	this->kind = SIGNAL_OUTPUT;
 }
 
-//signal_output::signal_output(const std::string & _label, const std::string & _to_parse)
-//{
-//	this->label = _label;
-//	this->to_parse = _to_parse;
-//	this->head = builtTree(_to_parse);
-//	Path(head);
-//	this->pathMin = findMin();
-//	this->pathMax = findMax();
-//	this->coni_Logici = coniLogici();
-//}
+signal_output::signal_output(const std::string & _label, const std::string & _to_parse, const bool & _value)
+{
+	this->kind = SIGNAL_OUTPUT;
+	this->value = _value;
+	this->label = _label;
+	this->to_parse = _to_parse;
+}
+
 
 signal_output::signal_output()
 {
@@ -55,6 +53,11 @@ signal_output::signal_output()
 	this->value = SIGNAL_NOT_DEFINED;
 	this->kind = SIGNAL_OUTPUT;
 	
+}
+
+std::string signal_output::getParse()
+{
+	return this->to_parse;
 }
 
 signal_input::signal_input(const std::string & _label, const bool & _value)

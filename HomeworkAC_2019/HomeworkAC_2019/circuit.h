@@ -1,30 +1,25 @@
 #pragma once
 
-#include <string>
-#include <vector>
-#include "signal.h"
+//#include "stringParser.hpp"
+//#include "btree.hpp"
 
 class circuit
 {
 public:
-	circuit(	const std::string &_name, 
-				const std::vector<signal_input>	&_input_string, 
-				const std::vector<signal_output>&_output_string
-			);
- 
+	//circuit(const std::string &_label, const std::vector < signal_input> &_input, const std::vector<signal_output> &_output);
+	
+
 private:
-	bool isSequential;
-	bool isComposed;
-	long double power;
+	/*std::string label;
+	std::vector < signal_input> input;
+	std::vector <signal_output> output;
 
-	//to_print Values
-	std::string name;
-	std::vector <signal_input> circuit_inputs;
-	std::vector <signal_output> circuit_outputs;
-	std::vector <std::string> pathMin;
-	std::vector <std::string> pathMax;
-	std::vector <std::string> coniLogici;
+	std::vector <std::vector <std::string>> min_Path;
+	std::vector <std::vector <std::string>> max_Path;
+	std::vector <std::vector <std::string>> coni_Logici;
 
+	std::vector <std::vector <calculatepath>> paths;
+
+	long double power;*/
 
 };
-

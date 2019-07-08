@@ -12,10 +12,7 @@
 					   
 */
 
-
 #include "signal.h"
-#include <vector>
-
 
 class flipflop
 {
