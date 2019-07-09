@@ -56,6 +56,9 @@
     <ClInclude Include="menu.h">
       <Filter>File di intestazione</Filter>
     </ClInclude>
+    <ClInclude Include="circuit.hpp">
+      <Filter>File di intestazione</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="descrizione.txt" />

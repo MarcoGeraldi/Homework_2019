@@ -8,11 +8,11 @@ assign y = NOT c
 endmodule
 
 module NOME_CIRCUITO_COMB2(
-clk
+	clk
 	input e, d
 	output c
 	input m
 );
-
+FF3 = e OR d
 assign c = e NAND (NOT d)
 endmodule

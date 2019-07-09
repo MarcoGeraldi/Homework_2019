@@ -1,27 +1,23 @@
 #include "flipflop.h"
 
-flipflop::flipflop(const int & _clk, const std::vector<signal_input>& _D)
+flipflop::flipflop(const std::string & _FF_label, const std::string & _FF_to_parse, const long int & _clkNum)
 {
-	this->D = _D;
-	this->clk = _clk;
-
-	//The output is setted by default to -1 (X) 
-
-	//for each clock cycle set the output Q as the input D
-	//if the signal input is longer than clk the remaining part of the signal will stay NOT_DEFINED
-	for (int i = 0; i <clk; i++)
-	{
-		Q[i].Set(D[i].Read());
-	}
+	this->clkNum = _clkNum;
+	this->FF_to_parse = _FF_to_parse;
+	this->FF_label = _FF_label;
 }
 
-std::vector<signal_output> flipflop::Read()
+std::string flipflop::FF_getParse()
+{
+	return this->FF_to_parse;
+}
+
+std::string flipflop::FF_getLabel()
+{
+	return this->FF_label;
+}
+
+std::vector<signal_output> flipflop::FF_Read()
 {
 	return this->Q;
 }
-
-signal_output flipflop::Read(const int & _index)
-{
-	return this->Q[_index];
-}
- 

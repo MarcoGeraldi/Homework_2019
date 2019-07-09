@@ -375,17 +375,7 @@ std::vector <calculatepath> Path(btree * _node){
 
 		calculatepath temp;
 
-		//the tree is empty
-		if (_node == NULL)
-		{
-			std::cerr << "the tree is empyt" << std::endl;
-			temp.path = -1;
-			temp.label = "NULL";
-			allpaths.push_back(temp);
-			return allpaths;
-		}
-
-		//a leaf wa found
+		//a leaf was found
 		if (_node->left == NULL && _node->right == NULL)
 		{
 			temp.path = counterpath;
@@ -412,9 +402,16 @@ std::vector <calculatepath> Path(btree * _node){
 		//the node just has a right child that was visited
 		if (_node->left == NULL && _node->right->colour == 'N')
 		{
-			counterpath--;
-			Path(returnParent(_node));//goes back to the parent
-			return allpaths;
+			if (_node->parent==NULL)//we have reached the root of a NOT node that was all visited
+			{
+				return allpaths;
+			}
+			else
+			{
+				counterpath--;
+				Path(returnParent(_node));//goes back to the parent
+				return allpaths;
+			}
 		}
 		//just the left child and it was visited
 		if (_node->right == NULL && _node->left->colour == 'N')
@@ -440,10 +437,21 @@ std::vector <calculatepath> Path(btree * _node){
 				return allpaths;
 			}
 		}
-		return allpaths;
+
+		//the tree is empty
+		if (_node == NULL)
+		{
+			std::cerr << "the tree is empyt" << std::endl;
+			temp.path = -1;
+			temp.label = "NULL";
+			allpaths.push_back(temp);
+			return allpaths;
+		}
+	return allpaths;
 }
 
 void delete_tree(btree *_node) {
+	allpaths.clear();
 	btree *temp;
 	if (_node==NULL) //the tree was deleted
 	{

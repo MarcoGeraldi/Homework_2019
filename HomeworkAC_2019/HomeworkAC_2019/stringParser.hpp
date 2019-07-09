@@ -1,6 +1,7 @@
 #pragma once
 
 #include "gate.h" 
+#include "flipflop.h"
 
 std::vector<size_t> positionOpen;
 std::vector<size_t> positionClose;

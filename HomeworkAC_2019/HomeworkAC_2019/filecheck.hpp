@@ -18,6 +18,7 @@ std::vector <int> _positionEndmodule, _positionModule;
 std::vector <int> _positionOpenBracket, _positionCloseBracket;
 std::vector <int> _positionInput, _positionOutput, _positionAssign, _positionClk, _positionFF;
 
+std::vector <bool> isSequential;
 
 //INPUT FILE
 
@@ -189,21 +190,28 @@ bool check_circuitDescr()
 			_stream_temp >> temp; //save the first word in a temporary value that should be FF number
 			_flipFlop = temp;
 
-			for (size_t j = 0; j < _flipFlop.length() - 2; j++)
+			if (_flipFlop.size()>=3)
 			{
-				if (_flipFlop[0] == 'F' && _flipFlop[1] == 'F' && isdigit(_flipFlop[j + 2]) != 0)
-					//the first and the second words have to be F and then just numbers
+				for (size_t j = 0; j < _flipFlop.size() - 2; j++)
 				{
-					_positionFF.push_back(index);
-					all_FF.push_back(line);
-					isOk = true;
+					if (_flipFlop[0] == 'F' && _flipFlop[1] == 'F' && isdigit(_flipFlop[j + 2]) != 0)
+						//the first and the second words have to be F and then just numbers
+					{
+						_positionFF.push_back(index);
+						all_FF.push_back(line);
+						isOk = true;
+					}
+					else
+					{
+						isOk = false;
+						std::cerr << "ERROR: syntax error at line " << index + 1 << std::endl;
+					}
 				}
-
-				else
-				{
-					isOk = false;
-					std::cerr << "ERROR: syntax error at line " << index + 1 << std::endl;
-				}
+			}
+			else
+			{
+				isOk = false;
+				std::cerr << "ERROR: syntax error at line " << index + 1 << std::endl;
 			}
 		}
 
@@ -284,7 +292,7 @@ bool check_circuitDescr()
 
 	if (isOk==true) //until now there are no error of sintax
 	{
-		//isSequential.resize(_positionEndmodule.size()); //it has to be as big as many circuits are in t
+		isSequential.resize(_positionEndmodule.size(), false); //it has to be as big as many circuits are in the file
 
 		for (size_t i = 0; i < _positionModule.size(); i++) 
 		{
@@ -306,6 +314,7 @@ bool check_circuitDescr()
 			
 			if (_positionClk.size() > 0) //if there a clock
 			{
+
 				int innerCounter = 0;
 
 				for (size_t counterClk = 0; counterClk < _positionClk.size(); counterClk++)
@@ -322,7 +331,7 @@ bool check_circuitDescr()
 
 						else
 						{
-							//da aggiunger se è sequenziale
+							isSequential[i] = true;
 						}
 					}
 				}
@@ -548,32 +557,61 @@ bool checkOutput(std::vector <std::string> & _to_check)
 }
 
 bool checkAssign(std::vector <std::string> & _to_check) {
-	bool okay = true;
 	for (size_t i = 0; i < _to_check.size(); i++)
 	{
 		for (size_t j = 0; j < _to_check[i].length(); j++)//for each string that contains input
 		{
-			//input can contains just letters, numbers, commas and square brackets
+			//input can contains just letters, commas and square brackets
 			if (isalpha(_to_check[i][j]) == 0 && _to_check[i][j] != '(' && _to_check[i][j] != ')' && _to_check[i][j] != ' ' && _to_check[i][j] != '\t' && _to_check[i][j]!='=')
 			{
-				okay = false;
+				std::cerr << "ERROR: syntax error at line " << _positionAssign[i]+1 << std::endl;
+				return false;
 			}
+		}
+	}
+	return true;
+}
 
-			else //there are no unwanted characters
+bool checkFF(std::vector <std::string> &_to_check) {
+
+	for (size_t i = 0; i < _to_check.size(); i++)
+	{
+		for (size_t j = 0; j < _to_check[i].length(); j++)//for each string that contains input
+		{
+			//input can contains just letters, number, commas and square brackets
+			if (isalpha(_to_check[i][j]) == 0 && _to_check[i][j] != '(' && _to_check[i][j] != ')' && _to_check[i][j] != ' ' && _to_check[i][j] != '\t' && _to_check[i][j] != '=' && isdigit(_to_check[i][j])==0)
 			{
-				//the string has to have spaces before the opened brackets and after the closed brackets
-				if( (_to_check[i][j]=='(' && _to_check[i][j-1]!=' ') || (_to_check[i][j]==')' && _to_check[i][j+1]!=' '))
+				std::cerr << "ERROR: syntax error at line " << _positionFF[i] + 1 << std::endl;
+				return false;
+			}
+		}
+	}
+	for (size_t j = 0; j < _positionModule.size(); j++)
+	{
+		for (size_t i = 0; i < _positionFF.size(); i++)
+		{
+			if (_positionFF[i] > _positionModule[j] && _positionFF[i] < _positionEndmodule[j])//for each circuit that contains a FF
+			{
+				if (isSequential[j] == false)
 				{
-					okay = false;
+					std::cerr << "ERROR: clock not defined in the circuit named: " << all_name[j] << std::endl;
+					return false;
 				}
 			}
 		}
 	}
-	return okay;
+	return true;
 }
 
-void checkSignals() {
-	check_circuitDescr();
-	checkInput	(all_input);
-	checkOutput	(all_output); 
+bool checkSignals() {
+	if (
+		check_circuitDescr() &&
+		checkInput(all_input) &&
+		checkOutput(all_output) &&
+		checkAssign(all_assign) &&
+		checkFF(all_FF)
+		)	return true;
+
+	else return false;
+	
 }

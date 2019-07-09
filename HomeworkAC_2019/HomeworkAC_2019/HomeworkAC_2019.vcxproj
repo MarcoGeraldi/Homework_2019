@@ -161,6 +161,7 @@
     <ClInclude Include="btree.hpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
     </ClInclude>
+    <ClInclude Include="circuit.hpp" />
     <ClInclude Include="filecheck.hpp" />
     <ClInclude Include="flipflop.h" />
     <ClInclude Include="gate.h" />
