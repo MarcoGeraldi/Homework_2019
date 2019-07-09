@@ -20,13 +20,15 @@ int main(){
 	
 	//string input = "(a OR (NOT c)) AND (NOT (b NAND (NOT d)))";
 	
-	filename_circuitDescr = "descrizione.txt";
-
-	std::vector <circuit> myCircuits=saveData();
-	for (int i = 0; i < myCircuits.size(); i++) {
+	/*for (int i = 0; i < myCircuits.size(); i++) {
 		std::cout << myCircuits[i].printPaths();
+	}*/
+	filename_circuitDescr = "descrizione.txt";
+	std::vector <circuit> myCircuits = saveData();
+	for (int i = 0; i < myCircuits.size(); i++)
+	{
+		myCircuits[i].simulation("input.txt");
 	}
-
 	return 0;
 }
 
@@ -61,6 +63,8 @@ std::vector <circuit> saveData() {
 					//divide the string by commas
 					while (getline(inputLine_stream, token, ','))
 					{
+						token.erase(remove(token.begin(), token.end(), ' '), token.end());
+
 						if (token.find("[") != std::string::npos) //if a input is a vector
 						{
 							int size_input;
@@ -139,6 +143,18 @@ std::vector <circuit> saveData() {
 	else
 	{
 		std::exit;
+	}
+}
+
+void menu() {
+
+	filename_circuitDescr = "descrizione.txt";
+	std::vector <circuit> myCircuits = saveData();
+	std::string what_to_do;
+	int which_circuit;
+
+	for (size_t i = 0; i < myCircuits.size(); i++)
+	{
 	}
 }
 

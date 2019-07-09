@@ -17,8 +17,9 @@ class flipflop
 {
 private:
 	long int clkNum;  //number of clock cycles
-	std::vector<signal_output>	 Q; //data out
-	std::vector<signal_input>	 D; //data in
+	signal_output	 Q; //data out
+	signal_output	_Q; // !Q
+	signal_input	 D; //data in
 
 	std::string FF_to_parse;
 	std::string FF_label;
@@ -27,6 +28,7 @@ public:
 
 	std::string FF_getParse();
 	std::string FF_getLabel();
-	std::vector <signal_output> FF_Read();
+	int FF_Read();
+	int notFF_Read();
  };
 

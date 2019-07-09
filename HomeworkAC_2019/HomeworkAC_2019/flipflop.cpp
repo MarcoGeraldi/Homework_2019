@@ -5,6 +5,9 @@ flipflop::flipflop(const std::string & _FF_label, const std::string & _FF_to_par
 	this->clkNum = _clkNum;
 	this->FF_to_parse = _FF_to_parse;
 	this->FF_label = _FF_label;
+	this->Q.Set(D.Read());
+	this->_Q.Set(!D.Read());
+
 }
 
 std::string flipflop::FF_getParse()
@@ -17,7 +20,7 @@ std::string flipflop::FF_getLabel()
 	return this->FF_label;
 }
 
-std::vector<signal_output> flipflop::FF_Read()
+ int flipflop::FF_Read()
 {
-	return this->Q;
+	return this->Q.Read();
 }

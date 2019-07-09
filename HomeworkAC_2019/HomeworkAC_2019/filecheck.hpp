@@ -14,6 +14,8 @@ std::fstream stream_circuitDescr;
 
 std::vector <std::string> all_input, all_output, all_assign, all_FF, all_instance, all_name;
 
+std::vector <std::vector<int> > vect_matrix;
+
 std::vector <int> _positionEndmodule, _positionModule;
 std::vector <int> _positionOpenBracket, _positionCloseBracket;
 std::vector <int> _positionInput, _positionOutput, _positionAssign, _positionClk, _positionFF;
@@ -31,8 +33,7 @@ std::vector <bool> isSequential;
 
 bool open_inputFile() {
 	bool isOk = true;
-	std::vector <bool> vect_signal;
-	std::vector <std::vector<bool> > vect_matrix;
+	std::vector <int> vect_signal;
 	std::string line;
 
 	stream_inputSignal.open(filename_inputSignal, std::fstream::in); //open file
@@ -50,34 +51,41 @@ bool open_inputFile() {
 			std::cerr << "ERROR: " << filename_inputSignal << " is empty." << std::endl;
 			return false;
 		}
-
+		int lineIndex = 1; //first line
 		//open the file until the end
 		while (!stream_inputSignal.eof()) {
 
 			if (std::getline(stream_inputSignal, line)) {
-
+				
 				for (size_t i = 0; i < line.size(); i++) {
 
 					//check if the line is correct
 					if (line[i] == '0' || line[i] == '1') {
-						vect_signal.push_back(bool(line[i])); // if correct add a signal to the vector
+						
+						vect_signal.push_back((int)line[i]-48); // if correct add a signal to the vector
 					}
 
 					else if (line[i] == ' '); //skip to the next character
 
 					else {
-						std::cerr << "ERROR: syntax error in " << filename_inputSignal << " , line " << i << std::endl;
+						std::cerr << "ERROR: syntax error in " << filename_inputSignal << " at line " << lineIndex << std::endl;
 						vect_signal.clear(); // remove all the elements added until now
 						isOk = false;
 					}
 				}
 
 				vect_matrix.push_back(vect_signal); //organize all the signal in a matrix, where a is vect_matrix [x][1]
-
-				//if the number of elements of each vector is different from the previous one give an error
-				if (vect_matrix.size() > 0 && (vect_matrix[vect_matrix.size()] != vect_matrix[vect_matrix.size() - 1])) {
-					vect_matrix.clear(); // remove all the elements added until now
-					std::cerr << "ERROR: signal vectors are not definited correctly in " << filename_inputSignal << std::endl;
+				vect_signal.clear();
+				lineIndex++;
+			}
+		}
+		if (vect_matrix.size()>1 && isOk==true)
+		{
+			for (size_t i = 0; i < vect_matrix.size()-1; i++)
+			{
+				if (vect_matrix[i].size() != vect_matrix[i+1].size())
+				{
+					std::cerr << "ERROR: input's signals not defined correctly" << std::endl;
 					isOk = false;
 				}
 			}
@@ -561,8 +569,16 @@ bool checkAssign(std::vector <std::string> & _to_check) {
 	{
 		for (size_t j = 0; j < _to_check[i].length(); j++)//for each string that contains input
 		{
-			//input can contains just letters, commas and square brackets
-			if (isalpha(_to_check[i][j]) == 0 && _to_check[i][j] != '(' && _to_check[i][j] != ')' && _to_check[i][j] != ' ' && _to_check[i][j] != '\t' && _to_check[i][j]!='=')
+			//input can contains just letters, numbers, commas and square brackets
+			if (isalpha(_to_check[i][j]) == 0 &&
+				_to_check[i][j] != '(' && 
+				_to_check[i][j] != ')' && 
+				_to_check[i][j] != ' ' && 
+				_to_check[i][j] != '\t' && 
+				_to_check[i][j]!='=' && 
+				isdigit(_to_check[i][j]) == 0 &&
+				_to_check[i][j] != '[' &&
+				_to_check[i][j] != ']')
 			{
 				std::cerr << "ERROR: syntax error at line " << _positionAssign[i]+1 << std::endl;
 				return false;

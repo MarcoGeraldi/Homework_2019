@@ -154,7 +154,6 @@
     <ClCompile Include="flipflop.cpp" />
     <ClCompile Include="gate.cpp" />
     <ClCompile Include="HomeworkAC_2019.cpp" />
-    <ClCompile Include="menu.cpp" />
     <ClCompile Include="signal.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -166,7 +165,6 @@
     <ClInclude Include="flipflop.h" />
     <ClInclude Include="gate.h" />
     <ClInclude Include="HomeworkAC_2019.h" />
-    <ClInclude Include="menu.h" />
     <ClInclude Include="signal.h" />
     <ClInclude Include="stringParser.hpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
@@ -174,6 +172,7 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="descrizione.txt" />
+    <Text Include="input.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

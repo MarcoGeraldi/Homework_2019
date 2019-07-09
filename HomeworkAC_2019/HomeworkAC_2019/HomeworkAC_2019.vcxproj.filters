@@ -27,9 +27,6 @@
     <ClCompile Include="flipflop.cpp">
       <Filter>File di intestazione\File di origine</Filter>
     </ClCompile>
-    <ClCompile Include="menu.cpp">
-      <Filter>File di intestazione\File di origine</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="HomeworkAC_2019.h">
@@ -53,14 +50,12 @@
     <ClInclude Include="btree.hpp">
       <Filter>File di intestazione</Filter>
     </ClInclude>
-    <ClInclude Include="menu.h">
-      <Filter>File di intestazione</Filter>
-    </ClInclude>
     <ClInclude Include="circuit.hpp">
       <Filter>File di intestazione</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="descrizione.txt" />
+    <Text Include="input.txt" />
   </ItemGroup>
 </Project>

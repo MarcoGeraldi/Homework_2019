@@ -10,12 +10,19 @@ public:
 	circuit(const std::string &_label, const std::vector < signal_input> &_input, const std::vector<signal_output> &_output, const std::vector<flipflop> &_fliflop );
 
 	std::string printPaths();
+	std::string printMin();
+	std::string printMax();
+	std::string printConiLogici();
+	std::string getLabel();
 
+	std::vector <std::vector <signal_output>> simulation(const std::string & file_name, const long int &_clk=0);
 
 private:
 	std::string label;
 	std::vector < signal_input> input;
 	std::vector <signal_output> output;
+	std::vector <std::vector <signal_output>> simulation_output;
+	std::vector <std::vector <signal_input>> simulation_input;
 	std::vector <flipflop> FF;
 
 	//struct that keeps the name and all the paths
@@ -33,14 +40,14 @@ private:
 
 	long double power;
 	bool isSequential;
+	long double clk;
 
 };
 
 circuit::circuit(	const std::string & _label, 
 					const std::vector<signal_input>& _input, 
 					const std::vector<signal_output>& _output, 
-					const bool & _isSequential
-				) 
+					const bool & _isSequential) 
 {
 	power = 0;
 
@@ -151,21 +158,139 @@ circuit::circuit(	const std::string & _label,
 
  inline std::string circuit::printPaths()
  {
-	 std::stringstream to_return_stream;
+	 std::stringstream print_stream;
 
+	 print_stream <<
+		 getLabel() << std::endl <<
+		 printMin() <<
+		 printMax() <<
+		 printConiLogici() << std::endl;
 	 
+	 
+		 return print_stream.str();
+ }
+
+ inline std::string circuit::printMin()
+{
+	 std::stringstream min_stream;
 	 for (size_t i = 0; i < circuit_output.size(); i++)
 	 {
 		 for (size_t j = 0; j < circuit_output[i].min_Path.size(); j++)
 		 {
-			 to_return_stream << "label: " << circuit_output[i].label << std::endl;
+			 min_stream << "label: " << circuit_output[i].label << std::endl;
 
-			 for (int k = 0; k < circuit_output[i].min_Path[j].size() ; k++)
+			 for (int k = 0; k < circuit_output[i].min_Path[j].size(); k++)
 			 {
-				 to_return_stream  << "min: " << circuit_output[i].min_Path[j][k] << std::endl;
+				 min_stream << "min: " << circuit_output[i].min_Path[j][k] << std::endl;
 			 }
 
 		 }
 	 }
-		 return to_return_stream.str();
+	 return min_stream.str();
  }
+
+ inline std::string circuit::printMax()
+ {
+	 std::stringstream max_stream;
+	 for (size_t i = 0; i < circuit_output.size(); i++)
+	 {
+		 for (size_t j = 0; j < circuit_output[i].max_Path.size(); j++)
+		 {
+			 max_stream << "label: " << circuit_output[i].label << std::endl;
+
+			 for (int k = 0; k < circuit_output[i].max_Path[j].size(); k++)
+			 {
+				 max_stream << "max: " << circuit_output[i].max_Path[j][k] << std::endl;
+			 }
+
+		 }
+	 }
+	 return max_stream.str();
+ }
+
+ inline std::string circuit::printConiLogici()
+ {
+	 std::stringstream coniLogici_stream;
+	 for (size_t i = 0; i < circuit_output.size(); i++)
+	 {
+		 for (size_t j = 0; j < circuit_output[i].coni_Logici.size(); j++)
+		 {
+			 coniLogici_stream << "label: " << circuit_output[i].label << std::endl;
+
+			 for (int k = 0; k < circuit_output[i].coni_Logici[j].size(); k++)
+			 {
+				 coniLogici_stream << "coni logici: " << circuit_output[i].coni_Logici[j][k] << std::endl;
+			 }
+
+		 }
+	 }
+	 return coniLogici_stream.str();
+ }
+
+ inline std::string circuit::getLabel()
+ {
+	 return this->label;
+ }
+
+ inline std::vector<std::vector<signal_output>> circuit::simulation(const std::string & file_name, const long int &_clk)
+ {
+	 filename_inputSignal = file_name;
+	 open_inputFile();
+	 clk = _clk;
+
+	 if (isSequential==false)
+	 {
+		 if (input.size()<=vect_matrix[0].size())
+		 {
+			 if (input.size() < vect_matrix[0].size()) std::cerr << "WARNING: too many input defined in the file" << std::endl;
+			 for (size_t i = 0; i < input.size(); i++)
+			 {
+				 input[i].Set(vect_matrix[0][i]);
+			 }
+			 std::vector<signal_output> vect_output;
+
+			 for (size_t i = 0; i < output.size(); i++)
+			 {
+				 signal_output t_output(output[i].getLabel(), getValue(output[i].getParse(), input));
+				 vect_output.push_back(t_output);
+			 }
+			 simulation_output.push_back(vect_output);
+
+			 for (int i = 0; i < simulation_output.size(); i++)
+			 {
+				 for (size_t j = 0; j < simulation_output[i].size(); j++)
+				 {
+					 std::cout << "label: " << simulation_output[i][j].getLabel() << " valore: " << simulation_output[i][j].getValue() << std::endl;
+				 }
+			 }
+		 }
+		 else
+		 {
+			 std::cerr << "ERROR: input's value are too few" << std::endl;
+		 }
+	 }
+	 else
+	 {
+		 if (clk > vect_matrix.size())
+		 {
+			 for (int i = 0; i < clk; i++)
+			 {
+				 std::vector <signal_input> t_vect;
+
+				 for (int j = 0; j < input.size(); j++)
+				 {
+					 signal_input t_input(input[j].getLabel(), vect_matrix[i][j]);
+					 t_vect.push_back(t_input);
+				 }
+				 simulation_input.push_back(t_vect);
+			 }
+		 }
+		 else
+		 {
+			 std::cerr << "ERROR: the clock is too big respect to input's lines" << std::endl;
+		 }
+	 }
+	 return simulation_output;
+ }
+
+ 

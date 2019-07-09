@@ -51,6 +51,7 @@ public:
 	signal_output();
 
 	std::string getParse();
+	int getValue();
 
 private:
 	std::string to_parse;

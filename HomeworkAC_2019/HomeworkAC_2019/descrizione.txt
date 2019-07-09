@@ -1,18 +1,8 @@
-module NOME(
+module CIRCUITO_COMBINATORIO(
 	input a, b[2]
 	input c 
 	output x, y
 );
-assign x = c OR (a AND b)
-assign y = NOT c
-endmodule
-
-module NOME_CIRCUITO_COMB2(
-	clk
-	input e, d
-	output c
-	input m
-);
-FF3 = e OR d
-assign c = e NAND (NOT d)
+assign x = c AND (a AND b[1])
+assign y = NOT b[0]
 endmodule
