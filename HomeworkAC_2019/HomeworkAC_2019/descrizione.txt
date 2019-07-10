@@ -1,8 +1,11 @@
-module CIRCUITO_COMBINATORIO(
+module CIRCUITO_SEQUENZIALE(
+	clk
 	input a, b[2]
 	input c 
-	output x, y
+	output x
 );
-assign x = c AND (a AND b[1])
-assign y = NOT b[0]
+
+FF1 = c AND (a OR b[1])
+FF2 = (NOT b[0]) OR a
+assign x = FF1 OR FF2
 endmodule

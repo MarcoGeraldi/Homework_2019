@@ -27,7 +27,7 @@ int main(){
 	std::vector <circuit> myCircuits = saveData();
 	for (int i = 0; i < myCircuits.size(); i++)
 	{
-		myCircuits[i].simulation("input.txt");
+		myCircuits[i].simulation("input.txt", 3);
 	}
 	return 0;
 }
@@ -79,6 +79,7 @@ std::vector <circuit> saveData() {
 							size_input = std::stoi(size_string);
 
 							label = all_input[i].substr(all_input[input_counter][0], positionSquare_open - all_input[input_counter][0]);
+							label.erase(remove(label.begin(), label.end(), ' '), label.end());
 
 							for (int j = 0; j < size_input; j++)
 							{
@@ -128,13 +129,18 @@ std::vector <circuit> saveData() {
 						flipflop FF(label_FF, string_FF);
 						t_FF.push_back(FF);
 					}
-					circuit t_circuit(t_name, t_input, t_output, t_FF);
+				}
+				circuit t_circuit(t_name, t_input, t_output, t_FF);
+				circuit_list.push_back(t_circuit);
+				if (all_FF.size()==0)
+				{
+					circuit t_circuit(t_name, t_input, t_output, isSequential[i]);
 					circuit_list.push_back(t_circuit);
 				}
 			}
 			else
 			{
-				circuit t_circuit(t_name, t_input, t_output);
+				circuit t_circuit(t_name, t_input, t_output, isSequential[i]);
 				circuit_list.push_back(t_circuit);
 			}
 		}

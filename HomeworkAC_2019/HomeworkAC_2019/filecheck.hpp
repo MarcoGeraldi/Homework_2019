@@ -190,7 +190,7 @@ bool check_circuitDescr()
 		{		
 			_positionOpenBracket.push_back(index);
 		}
-		if (line.find("FF") != std::string::npos)//look for a flipflop
+		if (line.find("FF") != std::string::npos && line.find("assign") == std::string::npos)//look for a flipflop
 		{
 			std::istringstream _stream_temp(line); //save the line in a stream
 			std::string _flipFlop;
@@ -510,7 +510,7 @@ bool checkOutput(std::vector <std::string> & _to_check)
 
 		for (size_t j = 0; j < _to_check[i].length(); j++)//for each string that contains output
 		{
-			//output can just contain letters and commas
+			//output can just contain letters and commas 
 			if (isalpha(_to_check[i][j]) == 0 && _to_check[i][j] != ',' &&  _to_check[i][j] != ' ' && _to_check[i][j] != '\t')
 			{
 				std::cerr << "ERROR: the output is not formatted correctly" << std::endl;
@@ -595,7 +595,9 @@ bool checkFF(std::vector <std::string> &_to_check) {
 		for (size_t j = 0; j < _to_check[i].length(); j++)//for each string that contains input
 		{
 			//input can contains just letters, number, commas and square brackets
-			if (isalpha(_to_check[i][j]) == 0 && _to_check[i][j] != '(' && _to_check[i][j] != ')' && _to_check[i][j] != ' ' && _to_check[i][j] != '\t' && _to_check[i][j] != '=' && isdigit(_to_check[i][j])==0)
+			if (isalpha(_to_check[i][j]) == 0 && _to_check[i][j] != '(' && _to_check[i][j] != ')' &&
+				_to_check[i][j] != ' ' && _to_check[i][j] != '\t' && _to_check[i][j] != '=' && isdigit(_to_check[i][j])==0 &&
+				_to_check[i][j] != '[' && _to_check[i][j] != ']')
 			{
 				std::cerr << "ERROR: syntax error at line " << _positionFF[i] + 1 << std::endl;
 				return false;

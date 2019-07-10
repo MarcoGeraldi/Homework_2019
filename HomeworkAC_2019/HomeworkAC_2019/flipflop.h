@@ -21,10 +21,13 @@ private:
 	signal_output	_Q; // !Q
 	signal_input	 D; //data in
 
+	int value;
+
 	std::string FF_to_parse;
 	std::string FF_label;
 public:
 	flipflop(const std::string & _FF_label, const std::string & _FF_to_parse,	const long int & _clkNum=0);
+	flipflop(const std::string & _FF_label, const int &_value = SIGNAL_NOT_DEFINED, const long int & _clkNum = 0);
 
 	std::string FF_getParse();
 	std::string FF_getLabel();

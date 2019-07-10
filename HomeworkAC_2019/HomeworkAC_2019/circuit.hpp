@@ -22,7 +22,8 @@ private:
 	std::vector < signal_input> input;
 	std::vector <signal_output> output;
 	std::vector <std::vector <signal_output>> simulation_output;
-	std::vector <std::vector <signal_input>> simulation_input;
+	//std::vector <std::vector <signal_input>> simulation_input;
+
 	std::vector <flipflop> FF;
 
 	//struct that keeps the name and all the paths
@@ -238,31 +239,29 @@ circuit::circuit(	const std::string & _label,
 	 open_inputFile();
 	 clk = _clk;
 
+		
 	 if (isSequential==false)
 	 {
+		 //combinatorio circuits and it only needs the first line written in the input file
 		 if (input.size()<=vect_matrix[0].size())
 		 {
 			 if (input.size() < vect_matrix[0].size()) std::cerr << "WARNING: too many input defined in the file" << std::endl;
+
 			 for (size_t i = 0; i < input.size(); i++)
 			 {
+				 //each input has its own label and now also its own value
 				 input[i].Set(vect_matrix[0][i]);
 			 }
+
 			 std::vector<signal_output> vect_output;
 
 			 for (size_t i = 0; i < output.size(); i++)
 			 {
+				 //takes the input and give back the value of the output
 				 signal_output t_output(output[i].getLabel(), getValue(output[i].getParse(), input));
 				 vect_output.push_back(t_output);
 			 }
 			 simulation_output.push_back(vect_output);
-
-			 for (int i = 0; i < simulation_output.size(); i++)
-			 {
-				 for (size_t j = 0; j < simulation_output[i].size(); j++)
-				 {
-					 std::cout << "label: " << simulation_output[i][j].getLabel() << " valore: " << simulation_output[i][j].getValue() << std::endl;
-				 }
-			 }
 		 }
 		 else
 		 {
@@ -271,7 +270,7 @@ circuit::circuit(	const std::string & _label,
 	 }
 	 else
 	 {
-		 if (clk > vect_matrix.size())
+		 if (clk <= vect_matrix.size())
 		 {
 			 for (int i = 0; i < clk; i++)
 			 {
@@ -282,7 +281,29 @@ circuit::circuit(	const std::string & _label,
 					 signal_input t_input(input[j].getLabel(), vect_matrix[i][j]);
 					 t_vect.push_back(t_input);
 				 }
-				 simulation_input.push_back(t_vect);
+				 std::vector <flipflop> vect_FF;
+
+				 for (int j = 0; j < FF.size(); j++)
+				 {
+					 flipflop t_FF(FF[j].FF_getLabel(), getValue(FF[j].FF_getParse(), t_vect, FF), clk);
+					 vect_FF.push_back(t_FF);
+				 }
+			
+				 std::vector<signal_output> vect_output;
+				 for (size_t j = 0; j < output.size(); j++)
+				 {
+					 //takes the input and give back the value of the output
+					 signal_output t_output(output[j].getLabel(), getValue(output[j].getParse(), t_vect, vect_FF));
+					 vect_output.push_back(t_output);
+				 }
+				 simulation_output.push_back(vect_output); 
+			 }
+			 for (int i = 0; i < simulation_output.size(); i++)
+			 {
+				 for (size_t j = 0; j < simulation_output[i].size(); j++)
+				 {
+					 std::cout << "label: " << simulation_output[i][j].getLabel() << " valore: " << simulation_output[i][j].getValue() << std::endl;
+				 }
 			 }
 		 }
 		 else
