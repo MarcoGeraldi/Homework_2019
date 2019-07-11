@@ -4,6 +4,7 @@
 #include <sstream>
 #include <iostream>
 #include <vector>
+#include <algorithm>
 #include "signal.h"
 
 
@@ -19,6 +20,7 @@ std::vector <std::vector<int> > vect_matrix;
 std::vector <int> _positionEndmodule, _positionModule;
 std::vector <int> _positionOpenBracket, _positionCloseBracket;
 std::vector <int> _positionInput, _positionOutput, _positionAssign, _positionClk, _positionFF;
+std::vector <int> _positionInstance;
 
 std::vector <bool> isSequential;
 
@@ -134,7 +136,7 @@ void checkString_Save(std::string &_temp, const std::string & _word_to_compare, 
 	}
 }
 
-bool check_circuitDescr() 
+bool check_circuitDescr()
 {
 	int index = 0;
 	bool isOk = true;
@@ -160,7 +162,8 @@ bool check_circuitDescr()
 				std::string t_name;
 				int m_tPos = line.find("module");
 				int p_tPos = line.find("(");
-				t_name = line.substr(m_tPos+7 , p_tPos - (m_tPos+7));//save the name after module and before the open bracket
+				t_name = line.substr(m_tPos + 7, p_tPos - (m_tPos + 7));//save the name after module and before the open bracket
+				t_name.erase(remove(t_name.begin(), t_name.end(), ' '), t_name.end());
 
 				all_name.push_back(t_name); //save the name
 			}
@@ -182,231 +185,342 @@ bool check_circuitDescr()
 		checkString_Save(line, "output", _positionOutput, index, isOk, all_output);
 		checkString_Save(line, "assign", _positionAssign, index, isOk, all_assign);
 
-		if (line.find(")") != std::string::npos && line.find(";") != std::string::npos)
+		if (line.find("instance") != std::string::npos)
 		{
-			_positionCloseBracket.push_back(index);
-		}
-		if (line.find("(") != std::string::npos && line.find("module") != std::string::npos)
-		{		
-			_positionOpenBracket.push_back(index);
-		}
-		if (line.find("FF") != std::string::npos && line.find("assign") == std::string::npos)//look for a flipflop
-		{
-			std::istringstream _stream_temp(line); //save the line in a stream
-			std::string _flipFlop;
+			std::vector <std::string> s_temp;
+			std::stringstream s_stream(line);
+			std::string t_string;
 
-			_stream_temp >> temp; //save the first word in a temporary value that should be FF number
-			_flipFlop = temp;
-
-			if (_flipFlop.size()>=3)
+			while (std::getline(s_stream, t_string, ' '))
 			{
-				for (size_t j = 0; j < _flipFlop.size() - 2; j++)
+				s_temp.push_back(t_string);
+			}
+
+			//the word is written correctly
+			if (s_temp[1].compare("instance") == 0)
+			{
+				std::vector<std::string>::const_iterator it = std::find(all_name.begin(), all_name.end(), s_temp[0]);
+				if (it != all_name.end())
 				{
-					if (_flipFlop[0] == 'F' && _flipFlop[1] == 'F' && isdigit(_flipFlop[j + 2]) != 0)
-						//the first and the second words have to be F and then just numbers
-					{
-						_positionFF.push_back(index);
-						all_FF.push_back(line);
-						isOk = true;
-					}
-					else
-					{
-						isOk = false;
-						std::cerr << "ERROR: syntax error at line " << index + 1 << std::endl;
-					}
+					_positionInstance.push_back(index);
+					all_instance.push_back(line);
+				}
+				else
+				{
+					std::cerr << "ERROR: circuit name in instance line not found at line: " << index +1 << std::endl;
+					isOk = false;
 				}
 			}
 			else
 			{
-				isOk = false;
-				std::cerr << "ERROR: syntax error at line " << index + 1 << std::endl;
-			}
-		}
-
-		if (line.find("clk") != std::string::npos) //look for the word clock 
-		{
-
-			std::istringstream _stream_temp(line); //save the line in a stream
-			_stream_temp >> temp; //save the sentence divided by space in a temporary value
-
-			if (temp.compare("clk") == 0) //if the word input is written correct then it saves the position
-			{
-				_positionClk.push_back(index);
-			}
-
-			else
-			{
-				std::cerr << "ERROR: syntax error at line " << index + 1 << std::endl;
+				std::cerr << "ERROR: syntax error at line: " << index + 1 << std::endl;
 				isOk = false;
 			}
 		}
-		index++;
-	}
-	stream_circuitDescr.close();
-
-	if (_positionEndmodule.size() == 0) //there are no endmodule
-	{
-		std::cerr << "ERROR: no endmodule found" << std::endl;
-		isOk= false;
-	}
-
-	if (_positionModule.size() == 0) //no module found
-	{
-		std::cerr << "ERROR: no module found" << std::endl;
-		isOk= false;
-	}
-	
-	if (_positionEndmodule.size()!=_positionModule.size()) //module and endmodule are not matching
-	{
-		std::cerr << "ERROR: there are more module than endmodule or viceversa" << std::endl;
-		isOk= false;
-	}
-	
-	if (_positionCloseBracket.size() == 0) //there are no closed brackets
-	{
-		std::cerr << "ERROR: no closed brackets found" << std::endl;
-		isOk= false;
-	}
-	 
-	if (_positionOpenBracket.size() == 0)//no opened brackets found
-	{
-		 std::cerr << "ERROR: no opened brackets found" << std::endl;
-		 isOk= false;
-	}
-	
-	if (_positionCloseBracket.size()!= _positionOpenBracket.size()) //the brackets are not matching
-	{
-		std::cerr << "ERROR: there aren't as many opened brackets as closed brackets" << std::endl;
-		isOk= false;
-	}
-	
-	if (_positionAssign.size()==0) //no assign found
-	{
-		std::cerr << "ERROR: no assign found" << std::endl;
-		isOk= false;
-	}
-	
-	if (_positionInput.size() == 0) //no input found
-	{
-		std::cerr << "ERROR: no input's signals found" << std::endl;
-		isOk= false;
-	}
-	
-	if (_positionOutput.size() == 0) //no output found
-	{
-		std::cerr << "ERROR: no output's signals found" << std::endl;
-		isOk= false;
-	}
-
-	if (isOk==true) //until now there are no error of sintax
-	{
-		isSequential.resize(_positionEndmodule.size(), false); //it has to be as big as many circuits are in the file
-
-		for (size_t i = 0; i < _positionModule.size(); i++) 
-		{
-			if (_positionModule[i]>_positionEndmodule[i]  ) //module has to be before endmodule
+		if (line.find(")") != std::string::npos && line.find(";") != std::string::npos)
 			{
-				std::cerr	<< "ERROR: module was found after endmodule or viceversa in the circuit number: " 
-							<< i+1
-							<< std::endl;
-				isOk= false;
+				_positionCloseBracket.push_back(index);
 			}
-			
-			if (_positionOpenBracket[i]>_positionCloseBracket[i] ) //opened bracket before the closed one
+		if (line.find("(") != std::string::npos && line.find("module") != std::string::npos)
 			{
-				std::cerr	<< "ERROR: the bracket aren't in the right place in the circuit number: " 
-							<< i + 1
-							<< std::endl;
-				isOk= false;
+				_positionOpenBracket.push_back(index);
 			}
-			
-			if (_positionClk.size() > 0) //if there a clock
+		if ((line.find("FF") != std::string::npos && line.find("assign") == std::string::npos) &&
+			(line.find("FF") != std::string::npos && line.find("instance") == std::string::npos))
+				//look for a flipflop but not in the sentence with assign and instance
 			{
+				std::istringstream _stream_temp(line); //save the line in a stream
+				std::string _flipFlop;
 
-				int innerCounter = 0;
+				_stream_temp >> temp; //save the first word in a temporary value that should be FF number
+				_flipFlop = temp;
 
-				for (size_t counterClk = 0; counterClk < _positionClk.size(); counterClk++)
+				if (_flipFlop.size() >= 3)
 				{
-					if (_positionClk[counterClk] > _positionModule[i] && _positionClk[counterClk]<_positionEndmodule[i]) //for each circuit
+					int flag = 0;
+					for (size_t j = 0; j < _flipFlop.size() - 2; j++)
 					{
-						innerCounter++;
-
-						if (innerCounter>1) //just one clock in a circuit
+						if (_flipFlop[0] == 'F' && _flipFlop[1] == 'F' && isdigit(_flipFlop[j + 2]) != 0)
+							//the first and the second words have to be F and then just numbers
 						{
-							std::cerr << "ERROR: too many clock defined in the circuit number " << i + 1 << std::endl;
-							isOk = false;
+							_positionFF.push_back(index);
+							all_FF.push_back(line);
+	
 						}
-
 						else
 						{
-							isSequential[i] = true;
+							isOk = false;
+							flag++;
+						}
+					}
+					if (flag==1 || flag==2) //flag=3 means that the word is all incorrect so it's not even a FF, but it's a FF in assign or instance
+					{
+						std::cerr << "ERROR: syntax error at line: " << index + 1 << std::endl;
+					}
+				}
+				else
+				{
+					isOk = false;
+					std::cerr << "ERROR: syntax error at line: " << index + 1 << std::endl;
+				}
+			}
+
+		if (line.find("clk") != std::string::npos) //look for the word clock 
+			{
+
+				std::istringstream _stream_temp(line); //save the line in a stream
+				_stream_temp >> temp; //save the sentence divided by space in a temporary value
+
+				if (temp.compare("clk") == 0) //if the word input is written correct then it saves the position
+				{
+					_positionClk.push_back(index);
+				}
+
+				else
+				{
+					std::cerr << "ERROR: syntax error at line " << index + 1 << std::endl;
+					isOk = false;
+				}
+			}
+		
+			std::stringstream s_line(line);
+			std::vector<std::string > words;
+			std::string t_word;
+			while (std::getline(s_line, t_word, ' '))
+			{
+				t_word.erase(remove(t_word.begin(), t_word.end(), '\t'), t_word.end());
+				words.push_back(t_word);
+			}
+
+			if (words.size()>0 &&
+				words[0] != "module" &&
+				words[0] != "clk" &&
+				words[0] != "input" &&
+				words[0] != "output" &&
+				words[0] != "assign" &&
+				(words[0][0] != 'F' && words[0][1] != 'F')
+				)
+			{
+				if (words.size()>1 && words[1] != "instance")
+				{
+					isOk = false;
+					std::cerr << "ERROR: syntax error at line : " << index + 1 << std::endl;
+				}
+			}
+			index++;
+	}
+		stream_circuitDescr.close();
+
+		if (_positionEndmodule.size() == 0) //there are no endmodule
+		{
+			std::cerr << "ERROR: no endmodule found" << std::endl;
+			isOk = false;
+		}
+
+		if (_positionModule.size() == 0) //no module found
+		{
+			std::cerr << "ERROR: no module found" << std::endl;
+			isOk = false;
+		}
+
+		if (_positionEndmodule.size() != _positionModule.size()) //module and endmodule are not matching
+		{
+			std::cerr << "ERROR: there are more module than endmodule or viceversa" << std::endl;
+			isOk = false;
+		}
+
+		if (_positionCloseBracket.size() == 0) //there are no closed brackets
+		{
+			std::cerr << "ERROR: no closed brackets found" << std::endl;
+			isOk = false;
+		}
+
+		if (_positionOpenBracket.size() == 0)//no opened brackets found
+		{
+			std::cerr << "ERROR: no opened brackets found" << std::endl;
+			isOk = false;
+		}
+
+		if (_positionCloseBracket.size() != _positionOpenBracket.size()) //the brackets are not matching
+		{
+			std::cerr << "ERROR: there aren't as many opened brackets as closed brackets" << std::endl;
+			isOk = false;
+		}
+
+		if (_positionAssign.size() == 0) //no assign found
+		{
+			std::cerr << "ERROR: no assign found" << std::endl;
+			isOk = false;
+		}
+
+		if (_positionInput.size() == 0) //no input found
+		{
+			std::cerr << "ERROR: no input's signals found" << std::endl;
+			isOk = false;
+		}
+
+		if (_positionOutput.size() == 0) //no output found
+		{
+			std::cerr << "ERROR: no output's signals found" << std::endl;
+			isOk = false;
+		}
+
+
+		if (isOk == true) //until now there are no error of sintax
+		{
+			isSequential.resize(_positionEndmodule.size(), false); //it has to be as big as many circuits are in the file
+
+			if (_positionModule.size() == 1 && _positionInstance.size() > 0)
+			{
+				std::cerr << "ERROR: no circuits defined before the composted one" << std::endl;
+				isOk = false;
+			}
+			
+			for (size_t i = 0; i < _positionModule.size(); i++)
+			{
+				if (_positionModule[i] > _positionEndmodule[i]) //module has to be before endmodule
+				{
+					std::cerr << "ERROR: module was found after endmodule or viceversa in the circuit number: "
+						<< i + 1
+						<< std::endl;
+					isOk = false;
+				}
+
+				if (_positionOpenBracket[i] > _positionCloseBracket[i]) //opened bracket before the closed one
+				{
+					std::cerr << "ERROR: the bracket aren't in the right place in the circuit number: "
+						<< i + 1
+						<< std::endl;
+					isOk = false;
+				}
+
+				if (_positionClk.size() > 0) //if there a clock
+				{
+
+					int innerCounter = 0;
+
+					for (size_t counterClk = 0; counterClk < _positionClk.size(); counterClk++)
+					{
+						if (_positionClk[counterClk] > _positionModule[i] && _positionClk[counterClk] < _positionEndmodule[i]) //for each circuit
+						{
+							innerCounter++;
+
+							if (innerCounter > 1) //just one clock in a circuit
+							{
+								std::cerr << "ERROR: too many clock defined in the circuit number " << i + 1 << std::endl;
+								isOk = false;
+							}
+
+							else
+							{
+								isSequential[i] = true;
+							}
+						}
+					}
+				}
+
+				for (size_t counterInput = 0; counterInput < _positionInput.size(); counterInput++)
+				{
+					if (_positionInput[counterInput] > _positionModule[i] && _positionInput[counterInput] < _positionEndmodule[i]) //for each circuit
+					{
+						if (_positionInput[counterInput]<_positionOpenBracket[i] || _positionInput[counterInput]>_positionCloseBracket[i])
+							//control that input's signals are written inside the brackets
+						{
+							std::cerr << "ERROR: the input's signals are not inside the brackets in the circuit number: "
+								<< i + 1
+								<< std::endl;
+							isOk = false;
+						}
+					}
+				}
+
+				for (size_t counterOutput = 0; counterOutput < _positionOutput.size(); counterOutput++)
+				{
+					if (_positionOutput[counterOutput] > _positionModule[i] && _positionOutput[counterOutput] < _positionEndmodule[i]) //for each circuit
+					{
+						if (_positionOutput[counterOutput]<_positionOpenBracket[i] || _positionOutput[counterOutput]>_positionCloseBracket[i])
+							//control that output's signals are written inside the brackets
+						{
+							std::cerr << "ERROR: the output's signals are not inside the brackets in the circuit number: "
+								<< i + 1
+								<< std::endl;
+							isOk = false;
+						}
+					}
+				}
+
+				for (size_t counterAssign = 0; counterAssign < _positionAssign.size(); counterAssign++)
+				{
+					if (_positionAssign[counterAssign] > _positionModule[i] && _positionAssign[counterAssign] < _positionEndmodule[i])//for each circuit
+					{
+						if (_positionAssign[counterAssign] < _positionCloseBracket[i])
+							//control that the word assign is written after the closed bracket but before the endmodule
+						{
+							std::cerr << "ERROR: the assign is not in the right place in the circuit number: "
+								<< i + 1
+								<< std::endl;
+							isOk = false;
+						}
+					}
+				}
+				for (size_t counterFF = 0; counterFF < _positionFF.size(); counterFF++)
+				{
+					if (_positionFF[counterFF] > _positionModule[i] && _positionFF[counterFF] < _positionEndmodule[i])//for each circuit
+					{
+						if (_positionFF[counterFF] < _positionCloseBracket[i])
+							//control that the fliflop is written after the closed bracket but before the endmodule
+						{
+							std::cerr << "ERROR: the flipflop is not in the right place in the circuit number: "
+								<< i + 1
+								<< std::endl;
+							isOk = false;
+						}
+					}
+				}
+				for (size_t counterInstance = 0; counterInstance < _positionInstance.size(); counterInstance++)
+				{
+					if (_positionInstance[counterInstance] > _positionModule[i] && _positionInstance[counterInstance] < _positionEndmodule[i])//for each circuit
+					{
+						if (_positionInstance[counterInstance] < _positionCloseBracket[i])
+							//control that the word instance is written after the closed bracket but before the endmodule
+						{
+							std::cerr << "ERROR: the instance is not in the right place in the circuit number: "
+								<< i + 1
+								<< std::endl;
+							isOk = false;
+						}
+					}
+					for (size_t j = 0; j < _positionFF.size(); j++)
+					{
+						if ((_positionInstance[counterInstance] > _positionModule[i] && _positionInstance[counterInstance] < _positionEndmodule[i])
+							&& (_positionFF[j] > _positionModule[i] && _positionFF[j] < _positionEndmodule[i]))
+						{
+							//instance line has to be before FF
+							if (_positionInstance[counterInstance] > _positionFF[j])
+							{
+								std::cerr << "ERROR: instance was found after FF" << std::endl;
+								isOk = false;
+							}
+						}
+					}
+					for (size_t j = 0; j < _positionAssign.size(); j++)
+					{
+						if ((_positionInstance[counterInstance] > _positionModule[i] && _positionInstance[counterInstance] < _positionEndmodule[i])
+							&& _positionAssign[j] > _positionModule[i] && _positionAssign[j] < _positionEndmodule[i])
+						{
+							//instance line has to be before assign
+							if (_positionInstance[counterInstance] > _positionAssign[j])
+							{
+								std::cerr << "ERROR: instance was found after assign" << std::endl;
+								isOk = false;
+							}
 						}
 					}
 				}
 			}
 
-			for (size_t counterInput=0		; counterInput		<	_positionInput.size();		counterInput++)
-			{
-				if (_positionInput[counterInput]>_positionModule[i] &&_positionInput[counterInput]<_positionEndmodule[i]) //for each circuit
-				{
-					if (_positionInput[counterInput]<_positionOpenBracket[i] || _positionInput[counterInput]>_positionCloseBracket[i])
-					//control that input's signals are written inside the brackets
-					{
-						std::cerr	<< "ERROR: the input's signals are not inside the brackets in the circuit number: "
-									<< i + 1	
-									<< std::endl;
-						isOk=false;
-					}
-				}
-			}
-
-			for (size_t counterOutput=0	; counterOutput		<	 _positionOutput.size();	counterOutput++)
-			{
-				if (_positionOutput[counterOutput]>_positionModule[i] &&_positionOutput[counterOutput] < _positionEndmodule[i]) //for each circuit
-				{
-					if (_positionOutput[counterOutput]<_positionOpenBracket[i] || _positionOutput[counterOutput]>_positionCloseBracket[i])
-								//control that output's signals are written inside the brackets
-					{
-						std::cerr	<< "ERROR: the output's signals are not inside the brackets in the circuit number: "
-									<< i+1
-									<< std::endl;
-						isOk=false;
-					}
-				}
-			}
-			
-			for (size_t counterAssign=0	; counterAssign		<	 _positionAssign.size();	counterAssign++)
-			{
-				if (_positionAssign[counterAssign] > _positionModule[i] &&_positionAssign[counterAssign] < _positionEndmodule[i])//for each circuit
-				{
-					if (_positionAssign[counterAssign] < _positionCloseBracket[i])
-						//control that the word assign is written after the closed bracket but before the endmodule
-					{
-						std::cerr << "ERROR: the assign is not in the right place in the circuit number: "
-							<< i + 1
-							<< std::endl;
-						isOk = false;
-					}
-				}
-			}
-			for (size_t counterFF = 0; counterFF < _positionFF.size(); counterFF++)
-			{
-				if (_positionFF[counterFF] > _positionModule[i] && _positionFF[counterFF] < _positionEndmodule[i])//for each circuit
-				{
-					if (_positionFF[counterFF] < _positionCloseBracket[i])
-						//control that the fliflop is written after the closed bracket but before the endmodule
-					{
-						std::cerr << "ERROR: the flipflop is not in the right place in the circuit number: "
-							<< i + 1
-							<< std::endl;
-						isOk = false;
-					}
-				}
-			}
-		}	
-		 
-	}
-	return isOk;
+		}
+		return isOk;
 }
 
 bool checkInput(std::vector <std::string> & _to_check) {
@@ -448,7 +562,7 @@ bool checkInput(std::vector <std::string> & _to_check) {
 				return false;
 			}
 
-			//if there is a space or tab in the input definition giva an error
+			//if there is a space or tab in the input definition gives an error
 			std::vector < int >  t_pos ;		
 			for (size_t l = 0; l < inputs[k].length(); l++)
 			{
@@ -621,13 +735,20 @@ bool checkFF(std::vector <std::string> &_to_check) {
 	return true;
 }
 
+//da fare
+bool checkInstance(std::vector <std::string> &_to_check) {
+	
+	return true;
+}
+
 bool checkSignals() {
 	if (
 		check_circuitDescr() &&
 		checkInput(all_input) &&
 		checkOutput(all_output) &&
 		checkAssign(all_assign) &&
-		checkFF(all_FF)
+		checkFF(all_FF) &&
+		checkInstance(all_instance)
 		)	return true;
 
 	else return false;

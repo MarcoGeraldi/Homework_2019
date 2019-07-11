@@ -27,7 +27,8 @@ int main(){
 	std::vector <circuit> myCircuits = saveData();
 	for (int i = 0; i < myCircuits.size(); i++)
 	{
-		myCircuits[i].simulation("input.txt", 3);
+		//myCircuits[i].simulation("input.txt", 3);
+		//std::cout << myCircuits[i].printPaths() << std::endl;
 	}
 	return 0;
 }
@@ -39,12 +40,13 @@ std::vector <circuit> saveData() {
 	//if the file is formatted correctly
 	if (checkSignals())
 	{
+		std::vector <signal_input> t_input;
+		std::vector <signal_output> t_output;
+		std::vector <flipflop> t_FF;
+
 		for (size_t i = 0; i < _positionModule.size(); i++)
 		{
 
-			std::vector <signal_input> t_input;
-			std::vector <signal_output> t_output;
-			std::vector <flipflop> t_FF;
 			//get Name
 			std::string t_name;
 			t_name = all_name[i];
@@ -97,7 +99,28 @@ std::vector <circuit> saveData() {
 					}
 				}
 			}
+			//get output
+			for (size_t j = 0; j < all_output.size(); j++)
+			{
 
+				if (_positionOutput[j] > _positionModule[i] && _positionOutput[j] < _positionEndmodule[i])
+				{
+					std::string output_string;
+					int position = all_output[j].find("output");
+					output_string = all_output[j].substr(position + 6, all_output[j].size());
+					std::stringstream outputLine_stream(output_string);
+					std::string token;
+
+					//divide the string by commas
+					while (getline(outputLine_stream, token, ','))
+					{
+						token.erase(remove(token.begin(), token.end(), ' '), token.end());
+
+						signal_output t_signal(token);
+						t_output.push_back(t_signal);
+					}
+				}
+			}
 			// get output and paths
 			for (size_t j = 0; j < all_assign.size(); j++)
 			{
@@ -109,8 +132,14 @@ std::vector <circuit> saveData() {
 					int pos_equal = all_assign[j].find("=");
 					label_output = all_assign[j].substr(position + 7, pos_equal - (position + 7) - 1);  // output label
 					assign_string = all_assign[j].substr(pos_equal + 2, all_assign[j].length() - (pos_equal)); // string output
-					signal_output t_oSignal(label_output, assign_string);
-					t_output.push_back(t_oSignal);
+
+					for (size_t j = 0; j < t_output.size(); j++)
+					{
+						if (t_output[j].getLabel()==label_output)
+						{
+							t_output[j].setParse(assign_string);
+						}
+					}
 				}
 			}
 
@@ -131,26 +160,244 @@ std::vector <circuit> saveData() {
 					}
 				}
 				circuit t_circuit(t_name, t_input, t_output, t_FF);
+
+
+				for (size_t j = 0; j < all_instance.size(); j++)
+				{
+					if (_positionInstance[j] > _positionModule[i] && _positionInstance[j] < _positionEndmodule[i])
+					{
+						t_circuit.setInstance(all_instance[j]);
+					}
+				}
 				circuit_list.push_back(t_circuit);
+				
 				if (all_FF.size()==0)
 				{
 					circuit t_circuit(t_name, t_input, t_output, isSequential[i]);
+
+					for (size_t j = 0; j < all_instance.size(); j++)
+					{
+						if (_positionInstance[j] > _positionModule[i] && _positionInstance[j] < _positionEndmodule[i])
+						{
+							t_circuit.setInstance(all_instance[j]);
+						}
+					}
 					circuit_list.push_back(t_circuit);
 				}
 			}
 			else
 			{
 				circuit t_circuit(t_name, t_input, t_output, isSequential[i]);
+
+				for (size_t j = 0; j < all_instance.size(); j++)
+				{
+					if (_positionInstance[j] > _positionModule[i] && _positionInstance[j] < _positionEndmodule[i])
+					{
+						t_circuit.setInstance(all_instance[j]);
+					}
+				}
 				circuit_list.push_back(t_circuit);
+				
+			}
+			t_input.clear();
+			t_output.clear();
+			t_FF.clear();
+		}
+		
+		for (size_t count_circuit = 0; count_circuit < circuit_list.size(); count_circuit++)
+		{
+			bool isCom = false;
+			std::vector < Instance> t_instance;
+
+			//circuit is composed so we need all the new input and output
+			if (circuit_list[count_circuit].getComposed())
+			{
+				t_instance=circuit_list[count_circuit].getInstance();
+				isCom = true;
+			}
+
+			for (size_t countInstance = 0; countInstance < t_instance.size(); countInstance++)
+			{
+				for (size_t countCC = 0; countCC < circuit_list.size(); countCC++)
+				{
+					//look for the name of the circuit that is written before the instance
+					if (circuit_list[countCC].getLabel() == t_instance[countInstance].label_circuitFrom)
+					{
+						//save the output of the circuit that will create the composed one
+						std::vector <signal_output> vect_output = circuit_list[countCC].getOutput();
+
+						std::string output_parse;
+						int pos_output;
+						std::string FF_parse;
+						int pos_FF;
+
+						for (size_t countOutput = 0; countOutput < vect_output.size(); countOutput++)
+						{
+							for (size_t countFrom = 0; countFrom < t_instance[countInstance].from_circuit.size(); countFrom++)
+							{
+								//look in every output if the label is the same in the instance
+								if (vect_output[countOutput].getLabel() == t_instance[countInstance].from_circuit[countFrom])
+								{
+									output_parse = vect_output[countOutput].getParse();
+									pos_output = countFrom;
+								}
+							}
+							//look through the string to parse
+							for (size_t countFrom = 0; countFrom < t_instance[countInstance].from_circuit.size(); countFrom++)
+							{
+								int pos;
+								do
+								{
+									//find the position of the input in order to replace it
+									pos = output_parse.find(t_instance[countInstance].from_circuit[countFrom]);
+									int lenght = t_instance[countInstance].from_circuit[countFrom].size();
+
+									//check if the word is the one that I'm looking for
+									if (pos > 0 && pos != output_parse.size())
+									{
+										if ((output_parse[pos - 1] == ' ' && output_parse[lenght + pos] == ' ') ||
+											(output_parse[pos - 1] == '(' && output_parse[lenght + pos] == ' ') ||
+											(output_parse[pos - 1] == ' ' && output_parse[lenght + pos] == ')'))
+										{
+											output_parse = output_parse.replace(pos, lenght, t_instance[countInstance].to_circuit[countFrom]);
+										}
+									}
+									else if (pos == 0)
+									{
+										if (output_parse[lenght + 1 + pos] == ' ' || output_parse[lenght + pos] == ')')
+										{
+											output_parse = output_parse.replace(pos, lenght, t_instance[countInstance].to_circuit[countFrom]);
+										}
+									}
+									else if (pos == output_parse.size())
+									{
+										if (output_parse[pos - 1] == ' ' || output_parse[pos - 1] == '(')
+										{
+											output_parse = output_parse.replace(pos, lenght, t_instance[countInstance].to_circuit[countFrom]);
+										}
+									}
+								} while (pos >= 0);
+							}
+
+							//save the output of the composed circuit
+							std::vector <signal_output> vett = circuit_list[count_circuit].getOutput();
+
+							int isFF = 1;
+							for (size_t k = 0; k < vett.size(); k++)
+							{
+								if (vett[k].getLabel() == t_instance[countInstance].to_circuit[pos_output])
+								{
+									//update the output and their string and then update
+									t_output = vett;
+									vett[k].setParse(output_parse);
+									t_output.push_back(vett[k]);
+									t_output.erase(t_output.begin() + k);
+									isFF = 0;
+								}
+							}
+
+							//no output was found than it has to be a FF
+							if (isFF == 1)
+							{
+								flipflop FF_temp(t_instance[countInstance].to_circuit[pos_output], output_parse);
+								t_FF.push_back(FF_temp);
+							}
+						}
+
+						std::vector <flipflop> vect_FF = circuit_list[countCC].getFF();
+
+						for (size_t countFF = 0; countFF < vect_FF.size(); countFF++)
+						{
+							for (size_t countFrom = 0; countFrom < t_instance[countInstance].from_circuit.size(); countFrom++)
+								{
+									//look in every FF to find if the label is the same in the instance
+								if (vect_FF[countFF].FF_getLabel() == t_instance[countInstance].from_circuit[countFrom])
+								{
+									FF_parse = vect_FF[countFF].FF_getParse();
+									pos_FF = countFrom;
+								}
+							}
+					
+							//look through the string to parse
+							for (size_t countFrom = 0; countFrom < t_instance[countInstance].from_circuit.size(); countFrom++)
+							{
+								int pos;
+								do
+								{
+									//find the position of the input in order to replace it
+									pos = FF_parse.find(t_instance[countInstance].from_circuit[countFrom]);
+									int lenght = t_instance[countInstance].from_circuit[countFrom].size();
+
+									//check if the word is the one that I'm looking for
+									if (pos > 0 && pos != FF_parse.size())
+									{
+										if ((FF_parse[pos - 1] == ' ' && FF_parse[lenght + pos] == ' ') ||
+											(FF_parse[pos - 1] == '(' && FF_parse[lenght + pos] == ' ') ||
+											(FF_parse[pos - 1] == ' ' && FF_parse[lenght + pos] == ')'))
+										{
+											FF_parse = FF_parse.replace(pos, lenght, t_instance[countInstance].to_circuit[countFrom]);
+										}
+									}
+									else if (pos == 0)
+									{
+										if (FF_parse[lenght + 1 + pos] == ' ' || FF_parse[lenght + pos] == ')')
+										{
+											FF_parse = FF_parse.replace(pos, lenght, t_instance[countInstance].to_circuit[countFrom]);
+										}
+									}
+									else if (pos == FF_parse.size())
+									{
+										if (FF_parse[pos - 1] == ' ' || FF_parse[pos - 1] == '(')
+										{
+											FF_parse = FF_parse.replace(pos, lenght, t_instance[countInstance].to_circuit[countFrom]);
+										}
+									}
+								} while (pos >= 0);
+							}								
+							//save the output of the composed circuit
+									
+							std::vector <signal_output> Fvett = circuit_list[count_circuit].getOutput();
+
+							int is_FF = 1;
+							for (size_t k = 0; k < Fvett.size(); k++)
+							{
+								if (Fvett[k].getLabel() == t_instance[countInstance].to_circuit[pos_FF])
+								{
+									//resave all the output and update them
+									t_output = Fvett;
+									Fvett[k].setParse(FF_parse);
+									t_output.push_back(Fvett[k]);
+
+									//delete the one that was saved without the new string to parse
+									t_output.erase(t_output.begin() + k);
+									is_FF = 0;
+								}
+							}
+	
+							//no output was found than it has to be a FF
+							if (is_FF == 1)
+							{
+								flipflop FF_temp(t_instance[countInstance].to_circuit[pos_FF], FF_parse);
+								t_FF.push_back(FF_temp);
+							}
+						}
+					}
+				}
+			}
+			if (isCom)
+			{
+				circuit_list[count_circuit].update(t_output, t_FF);
 			}
 		}
+
 		return circuit_list;
 	}
 	else
 	{
-		std::exit;
+		std::exit(EXIT_FAILURE);
 	}
 }
+
 
 void menu() {
 

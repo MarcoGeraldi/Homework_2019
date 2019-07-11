@@ -65,6 +65,11 @@ int signal_output::getValue()
 	return value;
 }
 
+void signal_output::setParse(const std::string & parse)
+{
+	this->to_parse = parse;
+}
+
 signal_input::signal_input(const std::string & _label, const bool & _value)
 {
 	this->label = _label;
