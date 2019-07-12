@@ -210,9 +210,12 @@ circuit::circuit(	const std::string & _label,
 
 			 for (size_t i = 0; i < output.size(); i++)
 			 {
-				 //takes the input and give back the value of the output
-				 signal_output t_output(output[i].getLabel(), getValue(output[i].getParse(), input));
-				 vect_output.push_back(t_output);
+				 if (output[i].getParse().size()!=0)
+				 {
+					 //takes the input and give back the value of the output
+					 signal_output t_output(output[i].getLabel(), getValue(output[i].getParse(), input));
+					 vect_output.push_back(t_output);
+				 }
 			 }
 			 simulation_output.push_back(vect_output);
 		 }
@@ -238,16 +241,22 @@ circuit::circuit(	const std::string & _label,
 
 				 for (int j = 0; j < FF.size(); j++)
 				 {
-					 flipflop t_FF(FF[j].FF_getLabel(), getValue(FF[j].FF_getParse(), t_vect, FF), clk);
-					 vect_FF.push_back(t_FF);
+					 if (FF[j].FF_getParse().size()!=0)
+					 {
+						 flipflop t_FF(FF[j].FF_getLabel(), getValue(FF[j].FF_getParse(), t_vect, FF), clk);
+						 vect_FF.push_back(t_FF);
+					 }
 				 }
 			
 				 std::vector<signal_output> vect_output;
 				 for (size_t j = 0; j < output.size(); j++)
 				 {
-					 //takes the input and give back the value of the output
-					 signal_output t_output(output[j].getLabel(), getValue(output[j].getParse(), t_vect, vect_FF));
-					 vect_output.push_back(t_output);
+					 if (output[j].getParse().size()!=0)
+					 {
+						 //takes the input and give back the value of the output
+						 signal_output t_output(output[j].getLabel(), getValue(output[j].getParse(), t_vect, vect_FF));
+						 vect_output.push_back(t_output);
+					 }
 				 }
 				 simulation_output.push_back(vect_output); 
 			 }
@@ -326,119 +335,130 @@ circuit::circuit(	const std::string & _label,
 
  inline void circuit::createTree()
  {
-	 //the circuit can be sequential but for sure there are no FF
-	 for (size_t i = 0; i < output.size(); i++)
+	 if (FF.size()==0)
 	 {
+		 //the circuit can be sequential but for sure there are no FF
+		 for (size_t i = 0; i < output.size(); i++)
+		 {
+			 if (output[i].getParse().size() != 0)
+			 {
+				 std::vector <calculatepath> t_path;
+				 std::vector <std::string > min;
+				 std::vector <std::string > max;
+				 std::vector <std::string > coni;
 
-		 std::vector <calculatepath> t_path;
-		 std::vector <std::string > min;
-		 std::vector <std::string > max;
-		 std::vector <std::string > coni;
+				 Paths t_paths;
 
-		 Paths t_paths;
+				 //for each output get the label of it
+				 t_paths.label = output[i].getLabel();
 
-		 //for each output get the label of it
-		 t_paths.label = output[i].getLabel();
+				 btree *_head;
+				 //create the tree
+				 _head = builtTree(output[i].getParse());
+				 //calculate the path
+				 t_path = Path(_head);
+				 //calculate min, max, coni
+				 min = findMin(t_path);
+				 max = findMax(t_path);
+				 coni = coniLogici(t_path);
 
-		 btree *_head;
-		 //create the tree
-		 _head = builtTree(output[i].getParse());
-		 //calculate the path
-		 t_path = Path(_head);
-		 //calculate min, max, coni
-		 min = findMin(t_path);
-		 max = findMax(t_path);
-		 coni = coniLogici(t_path);
+				 //save it in the struct so every output has its name, its min,max and coni
+				 t_paths.min_Path.push_back(min);
+				 t_paths.max_Path.push_back(max);
+				 t_paths.coni_Logici.push_back(coni);
+				 t_paths.paths.push_back(t_path);
 
-		 //save it in the struct so every output has its name, its min,max and coni
-		 t_paths.min_Path.push_back(min);
-		 t_paths.max_Path.push_back(max);
-		 t_paths.coni_Logici.push_back(coni);
-		 t_paths.paths.push_back(t_path);
+				 delete_tree(_head);
 
-		 delete_tree(_head);
-
-		 circuit_output.push_back(t_paths);
+				 circuit_output.push_back(t_paths);
+			 }
+		 }
 	 }
 
 	 for (size_t i = 0; i < FF.size(); i++)
 	 {
-		 std::vector <calculatepath> f_path;
-		 std::vector <std::string > f_min;
-		 std::vector <std::string > f_max;
-		 std::vector <std::string > f_coni;
+		 if (FF[i].FF_getParse().size()!=0)
+		 {
+			 std::vector <calculatepath> f_path;
+			 std::vector <std::string > f_min;
+			 std::vector <std::string > f_max;
+			 std::vector <std::string > f_coni;
 
-		 Paths t_paths;
+			 Paths t_paths;
 
-		 //get the name of the FF in order to associate it min, max and coni
-		 t_paths.label = FF[i].FF_getLabel();
+			 //get the name of the FF in order to associate it min, max and coni
+			 t_paths.label = FF[i].FF_getLabel();
 
-		 btree * F_head;
-		 F_head = builtTree(FF[i].FF_getParse());
-		 f_path = Path(F_head);
+			 btree * F_head;
+			 F_head = builtTree(FF[i].FF_getParse());
+			 f_path = Path(F_head);
 
-		 f_min = findMin(f_path);
-		 f_max = findMax(f_path);
-		 f_coni = coniLogici(f_path);
+			 f_min = findMin(f_path);
+			 f_max = findMax(f_path);
+			 f_coni = coniLogici(f_path);
 
-		 t_paths.min_Path.push_back(f_min);
-		 t_paths.max_Path.push_back(f_max);
-		 t_paths.coni_Logici.push_back(f_coni);
-		 t_paths.paths.push_back(f_path);
-		 delete_tree(F_head);
-		 circuit_FF.push_back(t_paths);
+			 t_paths.min_Path.push_back(f_min);
+			 t_paths.max_Path.push_back(f_max);
+			 t_paths.coni_Logici.push_back(f_coni);
+			 t_paths.paths.push_back(f_path);
+			 delete_tree(F_head);
+			 circuit_FF.push_back(t_paths);
+		 }
 	 }
 
 	 if (FF.size() > 0)
 	 {
 		 for (size_t i = 0; i < output.size(); i++)
 		 {
-			 std::vector <calculatepath> t_path;
-			 std::vector <std::string > min;
-			 std::vector <std::string > max;
-			 std::vector <std::string > coni;
-
-			 Paths t_paths;
-			 t_paths.label = output[i].getLabel();
-
-			 btree *_head;
-			 _head = builtTree(output[i].getParse());
-			 t_path = Path(_head);
-
-			 //if an output contains FF we have to add also the path of the FF in order to find min, max and coni
-			 for (size_t i = 0; i < t_path.size(); i++)
+			 if (output[i].getParse().size() != 0) 
 			 {
-				 for (size_t j = 0; j < circuit_FF.size(); j++)
+				 std::vector <calculatepath> t_path;
+				 std::vector <std::string > min;
+				 std::vector <std::string > max;
+				 std::vector <std::string > coni;
+
+				 Paths t_paths;
+				 t_paths.label = output[i].getLabel();
+
+				 btree *_head;
+				 _head = builtTree(output[i].getParse());
+				 t_path = Path(_head);
+
+				 //if an output contains FF we have to add also the path of the FF in order to find min, max and coni
+				 for (size_t i = 0; i < t_path.size(); i++)
 				 {
-					 if (t_path[i].label == circuit_FF[j].label)
+					 for (size_t j = 0; j < circuit_FF.size(); j++)
 					 {
-						 for (size_t k = 0; k < circuit_FF[j].paths.size(); k++)
+						 if (t_path[i].label == circuit_FF[j].label)
 						 {
-							 for (size_t l = 0; l < circuit_FF[j].paths[k].size(); l++)
+							 for (size_t k = 0; k < circuit_FF[j].paths.size(); k++)
 							 {
-								 calculatepath temp;
-								 //add to the FF paths the path between FF and the output
-								 circuit_FF[j].paths[k][l].path += t_path[i].path;
-								 temp.label = circuit_FF[j].paths[k][l].label;
-								 temp.path = circuit_FF[j].paths[k][l].path;
-								 t_path.push_back(temp);
+								 for (size_t l = 0; l < circuit_FF[j].paths[k].size(); l++)
+								 {
+									 calculatepath temp;
+									 //add to the FF paths the path between FF and the output
+									 circuit_FF[j].paths[k][l].path += t_path[i].path;
+									 temp.label = circuit_FF[j].paths[k][l].label;
+									 temp.path = circuit_FF[j].paths[k][l].path;
+									 t_path.push_back(temp);
+								 }
 							 }
+							 t_path.erase(t_path.begin() + i);
 						 }
-						 t_path.erase(t_path.begin() + i);
 					 }
 				 }
+				 min = findMin(t_path);
+				 max = findMax(t_path);
+				 coni = coniLogici(t_path);
+
+				 t_paths.min_Path.push_back(min);
+				 t_paths.max_Path.push_back(max);
+				 t_paths.coni_Logici.push_back(coni);
+				 t_paths.paths.push_back(t_path);
+				 delete_tree(_head);
+
+				 circuit_output.push_back(t_paths);
 			 }
-			 min = findMin(t_path);
-			 max = findMax(t_path);
-			 coni = coniLogici(t_path);
-
-			 t_paths.min_Path.push_back(min);
-			 t_paths.max_Path.push_back(max);
-			 t_paths.coni_Logici.push_back(coni);
-			 t_paths.paths.push_back(t_path);
-			 delete_tree(_head);
-
-			 circuit_output.push_back(t_paths);
 		 }
 	 }
  }

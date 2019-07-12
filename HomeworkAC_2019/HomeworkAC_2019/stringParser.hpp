@@ -378,17 +378,13 @@ int	getValue(const std::string & _input, const std::vector<signal_input> &_input
 
 	std::vector <signal_input> signals = _inputSignals;
 
- 
-
 	std::string input = _input;
 	int counter_p = getPositions(input, "(").size();
-
 	for (int i = 0; i < counter_p + 1; i++)
 	{
 		input = getSig(input, signals);
 		//cout << input << endl;
 	}
-
 	return stoi(input);
 }
 int	getValue(const std::string & _input, const std::vector<signal_input> &_inputSignals, const std::vector<flipflop> &_flipflops) {
@@ -405,6 +401,5 @@ int	getValue(const std::string & _input, const std::vector<signal_input> &_input
 		input = getSig(input, signals, flipflops);
 		//cout << input << endl;
 	}
-
 	return stoi(input);
 }

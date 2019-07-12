@@ -1,18 +1,23 @@
-module circuito (
-clk
-input l, m, r, n
-input c
+module circuito1 (
+input l, m
 output x
 );
-FF4 = (l OR r) AND (m XOR (NOT n))
 assign x = NOT (m AND l)
+endmodule
+
+module circuito2 (
+input r, n
+output  y
+);
+assign y = r OR n
 endmodule
 
 module circuito_composto (
 clk
 input a, b, c, d
-output o, k
+output o, k, w
 );
-circuito instance (.l=a, .m=b, .x=FF1, .FF4=o, .r=c, .n=d)
-assign k = FF1 OR d
+circuito1 instance (.l=a, .m=b, .x=FF1)
+circuito2 instance (.r=c, .n=d, .y=FF2)
+assign k = FF1 OR FF2
 endmodule
