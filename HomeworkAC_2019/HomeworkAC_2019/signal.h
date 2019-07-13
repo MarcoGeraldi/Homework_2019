@@ -53,9 +53,10 @@ public:
 	std::string getParse();
 	int getValue();
 	void setParse(const std::string & parse);
-
+ 
 private:
 	std::string to_parse;
+	 
 };
  
 //input signal

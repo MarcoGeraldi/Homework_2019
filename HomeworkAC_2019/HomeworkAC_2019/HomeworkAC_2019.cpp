@@ -18,27 +18,17 @@ la classe deve contenere input, output, path min e max, coni logici, se è sequen
 
 int main(){ 
 	
-	std::vector<signal_input> s;
-	signal_input s1("s1", 1);
-	signal_input s2("s2",1);
-
-	s.push_back(s1);
-	s.push_back(s2);
-
-	std::string input1 = "NOT 0";
-	std::string input2 = "NOT 1"; 
-
-	std::cout << input1 << " = " << getSig(input1, s)<< std::endl;
-
-	std::cout << input2 << " = " << getSig(input2, s) << std::endl;
 	 
 	/*for (int i = 0; i < myCircuits.size(); i++) {
 		std::cout << myCircuits[i].printPaths();
 	}*/
-	/*filename_circuitDescr = "descrizione.txt";
+	filename_circuitDescr = "descrizione.txt";
 	std::vector <circuit> myCircuits = saveData();
-	myCircuits[2].simulation("input.txt", 6);
-	*/
+	myCircuits[0].simulation("input.txt", 4);
+	double c;
+	filename_powerDescr = "potenza.txt";
+	c=myCircuits[0].getPower();
+	
 	//std::cout << myCircuits[i].printPaths() << std::endl;
 	return 0;
 }
@@ -423,6 +413,7 @@ void menu() {
 
 	for (size_t i = 0; i < myCircuits.size(); i++)
 	{
+
 	}
 }
 

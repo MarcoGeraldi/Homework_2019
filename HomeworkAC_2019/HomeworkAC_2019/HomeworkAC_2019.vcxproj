@@ -173,6 +173,7 @@
   <ItemGroup>
     <Text Include="descrizione.txt" />
     <Text Include="input.txt" />
+    <Text Include="potenza.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

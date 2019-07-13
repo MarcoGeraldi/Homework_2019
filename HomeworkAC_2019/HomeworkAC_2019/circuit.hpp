@@ -2,13 +2,21 @@
 #include "btree.hpp"
 #include "stringParser.hpp"
 
-
 struct Instance {
 	std::string label_circuitFrom;
 	std::vector <std::string> from_circuit;
 	std::vector <std::string> to_circuit;
 };
-
+struct powerMatrix {
+	std::vector < std::vector < int > > vect_and;
+	std::vector < std::vector < int	> > vect_or;
+	std::vector < std::vector < int	> > vect_nor;
+	std::vector < std::vector < int	> > vect_xor;
+	std::vector < std::vector < int > > vect_nand;
+	std::vector < std::vector < int > > vect_xnor;
+	std::vector < std::vector < int > > vect_not;
+	std::vector < std::vector < int > > vect_FF;
+};
 
 class circuit
 {
@@ -23,8 +31,6 @@ public:
 	std::string printConiLogici();
 	std::string getLabel();
 
-	void setInstance(std::string & _instance);
-	bool getComposed();
 
 	std::vector <std::vector <signal_output>> simulation(const std::string & file_name, const long int &_clk=0);
 
@@ -36,34 +42,45 @@ public:
 	
 	void update(const std::vector <signal_output> &_output, const std::vector <flipflop> &_FF);
 	void createTree();
+	void setInstance(std::string & _instance);
+
+	bool getComposed();
+
+	double getPower();
 
 private:
 	std::string label;
-	std::vector < signal_input> input;
+	std::vector <signal_input> input;
 	std::vector <signal_output> output;
 	std::vector <std::vector <signal_output>> simulation_output;
+	std::vector <std::vector <signal_input>> simulation_input;
+	std::vector <std::vector<flipflop>> simulation_FF;
 
 	std::vector <flipflop> FF;
 
 	std::vector <std::string> circuit_instance;
 
+	std::vector <std::string> min, max;
+
 	//struct that keeps the name and all the paths
 	struct Paths {
 		std::string label;
 
-		std::vector <std::vector <std::string>> min_Path;
-		std::vector <std::vector <std::string>> max_Path;
+		std::vector <std::string> min_Path;
+		std::vector <std::string> max_Path;
 		std::vector <std::vector <std::string>> coni_Logici;
 		std::vector <std::vector <calculatepath>> paths;
 	};
 
 	std::vector <Paths> circuit_output, circuit_FF;
 
-	long double power;
+	double power;
 	bool isSequential;
 	bool isComposted;
 	long double clk;
 
+	double t_power(std::vector < std::vector< int> > _vect, const double & _high, const double & _low);
+	void ClkNedd( flipflop & _flipf);
 };
 
 circuit::circuit(	const std::string & _label, 
@@ -186,15 +203,291 @@ circuit::circuit(	const std::string & _label,
 	 return this->isComposted;
  }
 
+inline double circuit::t_power(std::vector < std::vector< int> > _vect, const double & _high, const double & _low) {
+	 double tt_power = 0;
+	 if (_vect.size() > 0) {
+		 for (size_t i = 0; i < _vect.size(); i++)
+		 {
+			 if (_vect[i][0] == SIGNAL_HIGH)
+			 {
+				 tt_power += _high;
+			 }
+			 for (size_t j = 1; j < _vect[i].size(); j++)
+			 {
+				 // if rising
+				 if ((_vect[i][j] - _vect[i][j-1]) > 0)
+				 {
+					 tt_power += _high;
+				 }
+
+				 //if lower
+				 if ((_vect[i][j] - _vect[i][j - 1]) < 0)
+				 {
+
+					 tt_power += _low;
+				 }
+			 }
+		 }
+	 }
+	 return tt_power;
+ }
+
+inline void circuit::ClkNedd (flipflop & _flipf)
+{
+	int simple = 0;
+	int max = 1;
+	int flag = 0;
+
+	for (size_t i = 0; i < _flipf.getFound().size(); i++)
+	{
+		for (size_t j = 0; j < FF.size(); j++)
+		{
+			if (_flipf.getFound()[i] == FF[j].FF_getLabel())
+			{
+				//FF is simple so does not contains other FF
+				if (FF[j].getClkN() == 1)
+				{
+					simple++;
+				}
+				//found a FF that is not simple, so we have to check if the not simple FF contains simple or not simple FF
+				else
+				{
+					if (max < FF[j].getClkN())
+					{
+						max = FF[j].getClkN();
+						flag = 1;
+					}
+				}
+			}
+		}
+	}
+
+	if (_flipf.getFound().size()>0)
+	{
+		//FF contains only simple FF so the clk needed is 1
+		if (_flipf.getFound().size() == simple)
+		{
+			_flipf.setClkN(2);
+		}
+		if (flag==1)
+		{
+			_flipf.setClkN(max + 1);
+		}
+	}
+
+}
+
+ inline double circuit::getPower()
+ {
+	 std::vector <powerDef> powerLosses=checkPower();
+	 
+
+	 int isFF = 0;
+	 if (FF.size()>0)
+	 {
+		 isFF = 1;
+	 }
+
+	 for (size_t j = 0; j < output.size(); j++)
+	 {
+		 powerMatrix output_power;
+
+		 for (size_t k = 0; k < clk; k++)
+		 {
+			 
+			 std::string new_parse = output[j].getParse();
+			 int counter_p = getPositions(output[j].getParse(), "(").size();
+			 
+			 std::vector < int > not_vect ;
+			 std::vector < int > and_vect ;
+			 std::vector < int > or_vect  ;
+			 std::vector < int > xor_vect ;
+			 std::vector < int > nand_vect;
+			 std::vector < int > nor_vect ;
+			 std::vector < int > xnor_vect;
+			 std::vector <int> FF_vect;
+
+
+			 for (int i = 0; i < counter_p + 1; i++)
+			 {
+				 //get the positions of opened and closed brackets
+				 positionOpen = getPositions(new_parse, "(");
+				 positionClose = getPositions(new_parse, ")");
+
+
+				 size_t counterOpen = 0;
+				 size_t counterClose = 0;
+				 int flag = 0;
+
+				 //there are bracktes left
+				 if (positionOpen.size() != 0 && positionClose.size() != 0) 
+				 {
+
+					 while (counterOpen < positionOpen.size() - 1 && flag == 0)
+					 {
+						 //find the inner brackets
+						 if (positionOpen[counterOpen] < positionClose[counterClose] && positionOpen[counterOpen + 1] < positionClose[counterClose])
+						 {
+							 counterOpen++;
+						 }
+						 else
+						 {
+							 flag = 1;
+						 }
+					 }
+
+					 //take the sentence inside the brackets
+					 std::string s = new_parse.substr(positionOpen[counterOpen] + 1, positionClose[counterClose] - positionOpen[counterOpen] - 1);
+
+					 std::stringstream ss(s);
+					 std::vector<std::string> tokens;
+					 std::string token;
+
+					 //divide the string by spaces
+					 while (std::getline(ss, token, ' '))
+					 {
+						 tokens.push_back(token);
+					 }
+
+					 int out_now;
+					 std::stringstream s_out;
+					 //solve the sentence
+					 if (isFF ==1)
+					 {
+						 signal_output t_out = solve(tokens, simulation_input[k], simulation_FF[k]);
+						 out_now = t_out.Read();
+						 s_out << t_out.Read();
+					 }
+					 else
+					 {
+						 signal_output t_out = solve(tokens, simulation_input[k]);
+						 out_now = t_out.Read();
+						 s_out << t_out.Read();
+					 }
+					
+					 //replace the inner bracket with the resolution of the boolean operator
+					 new_parse.replace(positionOpen[counterOpen], positionClose[counterClose] - positionOpen[counterOpen] + 1, s_out.str());
+
+					 positionClose.erase(positionClose.begin() + counterClose);
+					 positionOpen.erase(positionOpen.begin() + counterOpen);
+
+					 if (tokens[0] == "NOT")	not_vect.push_back(out_now);
+					 if (tokens[1] == "AND")	and_vect.push_back(out_now);
+					 if (tokens[1] == "NAND")	nand_vect.push_back(out_now);
+					 if (tokens[1] == "OR")		or_vect.push_back(out_now);
+					 if (tokens[1] == "XOR")	xor_vect.push_back(out_now);
+					 if (tokens[1] == "NOR")	nor_vect.push_back(out_now);
+					 if (tokens[1] == "XNOR")	xnor_vect.push_back(out_now);
+					 for (size_t l = 0; l < simulation_FF[k].size(); l++)
+					 {
+						 if (tokens[0] == simulation_FF[k][l].FF_getLabel());
+						 {
+							 FF_vect.push_back(simulation_FF[k][l].FF_Read());
+						 }
+						 if (tokens.size() == 3)
+						 {
+							 if (tokens[2] == simulation_FF[k][l].FF_getLabel())
+							 {
+								 FF_vect.push_back(simulation_FF[k][l].FF_Read());
+							 }
+						 }
+					 }
+
+				 }
+				 else
+				 {
+					 std::stringstream ss(new_parse);
+					 std::vector<std::string> tokens;
+					 std::string token;
+
+					 while (std::getline(ss, token, ' ')) //divide the string by space
+					 {
+						 tokens.push_back(token);
+					 }
+
+					 int out_now;
+					 std::stringstream s_out;
+					 //solve the sentence
+					 if (isFF == 1)
+					 {
+						 signal_output t_out = solve(tokens, simulation_input[k], simulation_FF[k]);
+						 out_now = t_out.Read();
+						 s_out << t_out.Read();
+					 }
+					 else
+					 {
+						 signal_output t_out = solve(tokens, simulation_input[k]);
+						 out_now = t_out.Read();
+						 s_out << t_out.Read();
+					 }
+
+					 new_parse.replace(new_parse.begin(), new_parse.end(), s_out.str());
+
+					 if (tokens[0] == "NOT")	not_vect.push_back(out_now);
+					 if (tokens[1] == "AND")	and_vect.push_back(out_now);
+					 if (tokens[1] == "NAND")	nand_vect.push_back(out_now);
+					 if (tokens[1] == "OR")		or_vect.push_back(out_now);
+					 if (tokens[1] == "XOR")	xor_vect.push_back(out_now);
+					 if (tokens[1] == "NOR")	nor_vect.push_back(out_now);
+					 if (tokens[1] == "XNOR")	xnor_vect.push_back(out_now);
+
+					for (size_t l = 0; l < simulation_FF[k].size(); l++)
+					{
+						if (tokens[0] == simulation_FF[k][l].FF_getLabel());
+						{
+							FF_vect.push_back(simulation_FF[k][l].FF_Read());
+						}
+						if (tokens.size()==3)
+						{
+							if (tokens[2] == simulation_FF[k][l].FF_getLabel())
+							{
+								FF_vect.push_back(simulation_FF[k][l].FF_Read());
+							}
+						}
+					}
+				}
+			 }
+			 if (not_vect.size()	> 0)	output_power.vect_not.push_back(not_vect);
+			 if (and_vect.size()	> 0)	output_power.vect_and.push_back(and_vect);
+			 if (nand_vect.size()	> 0)	output_power.vect_nand.push_back(nand_vect);
+			 if (nor_vect.size()	> 0)	output_power.vect_nor.push_back(nor_vect);
+			 if (or_vect.size()		> 0)	output_power.vect_or.push_back(or_vect);
+			 if (xnor_vect.size()	> 0)	output_power.vect_xnor.push_back(xnor_vect);
+			 if (xor_vect.size()	> 0)	output_power.vect_xor.push_back(xor_vect);
+			 if (FF_vect.size()		> 0)	output_power.vect_FF.push_back(FF_vect);
+
+		 } 	
+
+		 for (size_t k = 0; k < powerLosses.size(); k++)
+		 {
+			 if (powerLosses[k].gate == "NOT")	power += t_power(output_power.vect_not, powerLosses[k].to1, powerLosses[k].to0);
+			 if (powerLosses[k].gate == "AND")	power += t_power(output_power.vect_and, powerLosses[k].to1, powerLosses[k].to0);
+			 if (powerLosses[k].gate == "NAND") power += t_power(output_power.vect_nand, powerLosses[k].to1, powerLosses[k].to0);
+			 if (powerLosses[k].gate == "NOR")	power += t_power(output_power.vect_nor, powerLosses[k].to1, powerLosses[k].to0);
+			 if (powerLosses[k].gate == "OR")	power += t_power(output_power.vect_or, powerLosses[k].to1, powerLosses[k].to0);
+			 if (powerLosses[k].gate == "XNOR") power += t_power(output_power.vect_xnor, powerLosses[k].to1, powerLosses[k].to0);
+			 if (powerLosses[k].gate == "XOR")	power += t_power(output_power.vect_xor, powerLosses[k].to1, powerLosses[k].to0);
+			 if (powerLosses[k].gate == "FF")	power += t_power(output_power.vect_FF, powerLosses[k].to1, powerLosses[k].to0);
+		 }
+	 }
+
+
+
+	 return this->power;
+}
+	 
  inline std::vector<std::vector<signal_output>> circuit::simulation(const std::string & file_name, const long int &_clk)
  {
 	 filename_inputSignal = file_name;
 	 open_inputFile();
 	 clk = _clk;
 
+	 int innerCount = 0;
 		
 	 if (isSequential==false)
 	 {
+		 clk = 1;
+
 		 //combinatorio circuits and it only needs the first line written in the input file
 		 if (input.size()<=vect_matrix[0].size())
 		 {
@@ -205,6 +498,8 @@ circuit::circuit(	const std::string & _label,
 				 //each input has its own label and now also its own value
 				 input[i].Set(vect_matrix[0][i]);
 			 }
+
+			 simulation_input.push_back(input);
 
 			 std::vector<signal_output> vect_output;
 
@@ -226,8 +521,15 @@ circuit::circuit(	const std::string & _label,
 	 }
 	 else
 	 {
+		 int checkCLK=0;
+
 		 if (clk <= vect_matrix.size())
 		 {
+			 for (size_t j = 0; j < FF.size(); j++)
+			 {
+				 ClkNedd(FF[j]);
+			 }
+			 
 			 for (int i = 0; i < clk; i++)
 			 {
 				 std::vector <signal_input> t_vect;
@@ -237,6 +539,8 @@ circuit::circuit(	const std::string & _label,
 					 signal_input t_input(input[j].getLabel(), vect_matrix[i][j]);
 					 t_vect.push_back(t_input);
 				 }
+				 simulation_input.push_back(t_vect);
+
 				 std::vector <flipflop> vect_FF;
 
 				 for (int j = 0; j < FF.size(); j++)
@@ -247,8 +551,10 @@ circuit::circuit(	const std::string & _label,
 						 vect_FF.push_back(t_FF);
 					 }
 				 }
+				 simulation_FF.push_back(vect_FF);
 			
 				 std::vector<signal_output> vect_output;
+
 				 for (size_t j = 0; j < output.size(); j++)
 				 {
 					 if (output[j].getParse().size()!=0)
@@ -260,13 +566,13 @@ circuit::circuit(	const std::string & _label,
 				 }
 				 simulation_output.push_back(vect_output); 
 			 }
-			 for (int i = 0; i < simulation_output.size(); i++)
+			/* for (int i = 0; i < simulation_output.size(); i++)
 			 {
 				 for (size_t j = 0; j < simulation_output[i].size(); j++)
 				 {
 					 std::cout << "label: " << simulation_output[i][j].getLabel() << " valore: " << simulation_output[i][j].getValue() << std::endl;
 				 }
-			 }
+			 }*/
 		 }
 		 else
 		 {
@@ -363,8 +669,8 @@ circuit::circuit(	const std::string & _label,
 				 coni = coniLogici(t_path);
 
 				 //save it in the struct so every output has its name, its min,max and coni
-				 t_paths.min_Path.push_back(min);
-				 t_paths.max_Path.push_back(max);
+				 t_paths.min_Path=min;
+				 t_paths.max_Path=max;
 				 t_paths.coni_Logici.push_back(coni);
 				 t_paths.paths.push_back(t_path);
 
@@ -375,9 +681,9 @@ circuit::circuit(	const std::string & _label,
 		 }
 	 }
 
-	 for (size_t i = 0; i < FF.size(); i++)
+	 for (size_t e = 0; e < FF.size(); e++)
 	 {
-		 if (FF[i].FF_getParse().size()!=0)
+		 if (FF[e].FF_getParse().size()!=0)
 		 {
 			 std::vector <calculatepath> f_path;
 			 std::vector <std::string > f_min;
@@ -387,18 +693,51 @@ circuit::circuit(	const std::string & _label,
 			 Paths t_paths;
 
 			 //get the name of the FF in order to associate it min, max and coni
-			 t_paths.label = FF[i].FF_getLabel();
+			 t_paths.label = FF[e].FF_getLabel();
 
 			 btree * F_head;
-			 F_head = builtTree(FF[i].FF_getParse());
+			 F_head = builtTree(FF[e].FF_getParse());
 			 f_path = Path(F_head);
 
+			 int flag = 0;
+			 //if an output contains FF we have to add also the path of the FF in order to find min, max and coni
+			 for (size_t i = 0; i < f_path.size(); i++)
+			 {
+				 if (flag==1 && i!=0)
+				 {
+					 i=0;
+				 }
+				 for (size_t j = 0; j < circuit_FF.size(); j++)
+				 {
+					 if (f_path[i].label == circuit_FF[j].label)
+					 {
+						 for (size_t k = 0; k < circuit_FF[j].paths.size(); k++)
+						 {
+							 for (size_t l = 0; l < circuit_FF[j].paths[k].size(); l++)
+							 {
+								 calculatepath temp;
+								 //add to the FF paths the path between FF and the output
+								 circuit_FF[j].paths[k][l].path += f_path[i].path;
+								 temp.label = circuit_FF[j].paths[k][l].label;
+								 temp.path = circuit_FF[j].paths[k][l].path;
+								 f_path.push_back(temp);
+							 }
+						 }
+						 f_path.erase(f_path.begin() + i);
+						 flag = 1;
+					 }
+					 else
+					 {
+						 flag = 0;
+					 }
+				 }
+			 }
 			 f_min = findMin(f_path);
 			 f_max = findMax(f_path);
 			 f_coni = coniLogici(f_path);
 
-			 t_paths.min_Path.push_back(f_min);
-			 t_paths.max_Path.push_back(f_max);
+			 t_paths.min_Path=f_min;
+			 t_paths.max_Path=f_max;
 			 t_paths.coni_Logici.push_back(f_coni);
 			 t_paths.paths.push_back(f_path);
 			 delete_tree(F_head);
@@ -408,9 +747,9 @@ circuit::circuit(	const std::string & _label,
 
 	 if (FF.size() > 0)
 	 {
-		 for (size_t i = 0; i < output.size(); i++)
+		 for (size_t e = 0; e < output.size(); e++)
 		 {
-			 if (output[i].getParse().size() != 0) 
+			 if (output[e].getParse().size() != 0) 
 			 {
 				 std::vector <calculatepath> t_path;
 				 std::vector <std::string > min;
@@ -418,15 +757,19 @@ circuit::circuit(	const std::string & _label,
 				 std::vector <std::string > coni;
 
 				 Paths t_paths;
-				 t_paths.label = output[i].getLabel();
+				 t_paths.label = output[e].getLabel();
 
 				 btree *_head;
-				 _head = builtTree(output[i].getParse());
+				 _head = builtTree(output[e].getParse());
 				 t_path = Path(_head);
-
+				 int m_flag = 0;
 				 //if an output contains FF we have to add also the path of the FF in order to find min, max and coni
 				 for (size_t i = 0; i < t_path.size(); i++)
 				 {
+					 if (m_flag == 1 && i != 0)
+					 {
+						 i = 0;
+					 }
 					 for (size_t j = 0; j < circuit_FF.size(); j++)
 					 {
 						 if (t_path[i].label == circuit_FF[j].label)
@@ -444,6 +787,11 @@ circuit::circuit(	const std::string & _label,
 								 }
 							 }
 							 t_path.erase(t_path.begin() + i);
+							 m_flag = 1;
+						 }
+						 else
+						 {
+							 m_flag = 0;
 						 }
 					 }
 				 }
@@ -451,8 +799,8 @@ circuit::circuit(	const std::string & _label,
 				 max = findMax(t_path);
 				 coni = coniLogici(t_path);
 
-				 t_paths.min_Path.push_back(min);
-				 t_paths.max_Path.push_back(max);
+				 t_paths.min_Path=min;
+				 t_paths.max_Path=max;
 				 t_paths.coni_Logici.push_back(coni);
 				 t_paths.paths.push_back(t_path);
 				 delete_tree(_head);
@@ -461,6 +809,7 @@ circuit::circuit(	const std::string & _label,
 			 }
 		 }
 	 }
+	
  }
 
 

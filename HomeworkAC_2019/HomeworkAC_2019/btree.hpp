@@ -504,14 +504,6 @@ void delete_tree(btree *_node) {
 	return;
 }
 
-//void createDeleteTree(std::string & _input){
-//
-//	btree * head;
-//	head = builtTree(_input);
-//	Path(head);
-//	delete_tree(head);
-//}
-
 std::vector <std::string> findMin(const std:: vector <calculatepath> &to_calculate) {
 
 	std::vector<int> save_path;
@@ -561,7 +553,7 @@ std::vector <std::string> coniLogici(const std::vector <calculatepath> &_to_calc
 	
 	std::vector <std::string> input;
 	
-	for (size_t i = 0; i < _to_calculate.size(); i++)
+	for (size_t i = 0; i < _to_calculate.size()-1; i++)
 	{
 		input.push_back(_to_calculate[i].label);
 	}

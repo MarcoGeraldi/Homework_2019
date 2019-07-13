@@ -57,5 +57,6 @@
   <ItemGroup>
     <Text Include="descrizione.txt" />
     <Text Include="input.txt" />
+    <Text Include="potenza.txt" />
   </ItemGroup>
 </Project>

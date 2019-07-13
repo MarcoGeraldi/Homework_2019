@@ -32,7 +32,7 @@ std::vector<size_t> getPositions(const std::string &_inputString, const std::str
 //from a simple string, return output value
 
 //Solve a sentence with FF
-signal_output solve( std::vector < std::string > &_toSolve, const std::vector<signal_input> &_inputSignals, const std::vector<flipflop> &_flipflops) {
+signal_output solve(std::vector <std::string> &_toSolve, const std::vector<signal_input> &_inputSignals, const std::vector<flipflop> &_flipflops) {
 
 
 	std::vector <signal_input> signals = _inputSignals;
@@ -129,7 +129,7 @@ signal_output solve( std::vector < std::string > &_toSolve, const std::vector<si
 	return out;
 }
 //Solve a sentence without FF
-signal_output solve(std::vector < std::string > &_toSolve, const std::vector<signal_input> &_inputSignals) {
+signal_output solve(std::vector <std::string> &_toSolve, const std::vector<signal_input> &_inputSignals) {
 
 
 	std::vector <signal_input> signals = _inputSignals;
@@ -200,12 +200,12 @@ signal_output solve(std::vector < std::string > &_toSolve, const std::vector<sig
 		sig.push_back(sig1);
 		sig.push_back(sig2);
 
-		if (_toSolve[1] == "AND") { AND and_gate(sig);	out.Set(and_gate.Read()); }
-		if (_toSolve[1] == "OR") { OR or_gate(sig);		out.Set(or_gate.Read()); }
-		if (_toSolve[1] == "NOR") { NOR nor_gate(sig);	out.Set(nor_gate.Read()); }
-		if (_toSolve[1] == "XOR") { XOR xor_gate(sig);	out.Set(xor_gate.Read()); }
-		if (_toSolve[1] == "NAND") { NAND nand_gate(sig);	out.Set(nand_gate.Read()); }
-		if (_toSolve[1] == "XNOR") { XNOR xnor_gate(sig);	out.Set(xnor_gate.Read()); }
+		if (_toSolve[1] == "AND") { AND and_gate(sig);		out.Set(and_gate.Read());	}
+		if (_toSolve[1] == "OR")  { OR or_gate(sig);		out.Set(or_gate.Read());	}
+		if (_toSolve[1] == "NOR") { NOR nor_gate(sig);		out.Set(nor_gate.Read());	}
+		if (_toSolve[1] == "XOR") { XOR xor_gate(sig);		out.Set(xor_gate.Read());	}
+		if (_toSolve[1] == "NAND") { NAND nand_gate(sig);	out.Set(nand_gate.Read());	}
+		if (_toSolve[1] == "XNOR") { XNOR xnor_gate(sig);	out.Set(xnor_gate.Read());  }
 	}
 
 
@@ -403,3 +403,4 @@ int	getValue(const std::string & _input, const std::vector<signal_input> &_input
 	}
 	return stoi(input);
 }
+ 

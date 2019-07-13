@@ -6,12 +6,14 @@
 #include <vector>
 #include <algorithm>
 #include "signal.h"
-
+#include "stringParser.hpp"
 
 std::string filename_inputSignal;
 std::string filename_circuitDescr;
+std::string filename_powerDescr;
 std::fstream stream_inputSignal;
 std::fstream stream_circuitDescr;
+std::fstream stream_powerDescr;
 
 std::vector <std::string> all_input, all_output, all_assign, all_FF, all_instance, all_name;
 
@@ -23,6 +25,12 @@ std::vector <int> _positionInput, _positionOutput, _positionAssign, _positionClk
 std::vector <int> _positionInstance;
 
 std::vector <bool> isSequential;
+
+struct powerDef {
+	std::string gate;
+	double to1;
+	double to0;
+};
 
 //INPUT FILE
 
@@ -739,6 +747,152 @@ bool checkFF(std::vector <std::string> &_to_check) {
 bool checkInstance(std::vector <std::string> &_to_check) {
 	
 	return true;
+}
+
+std::vector <powerDef> checkPower() {
+	 
+	std::vector <powerDef> _matrix_power;
+	std::string line;
+	stream_powerDescr.open(filename_powerDescr, std::fstream::in); //open file
+
+	bool isOK = true;
+
+	//check for opening errors
+	if (!stream_powerDescr.is_open()) {
+		std::cerr << "ERROR: can't open " << filename_powerDescr << std::endl;
+		isOK=false;
+	}
+	else
+	{
+		//if the file is empty return an error
+		if (stream_powerDescr.eof()) {
+			std::cerr << "ERROR: " << filename_powerDescr << " is empty." << std::endl;
+			isOK= false;
+		}
+
+		int index = 0;
+		//open the file until the end
+		while (!stream_powerDescr.eof()) {
+
+			if (std::getline(stream_powerDescr, line)) {
+				index++;
+				std::stringstream ss(line);
+				std:: string temp;
+			
+				temp = ss.str();
+
+				if (temp[0]!='#') //skip comments
+				{
+					std::vector<std::string> tokens;
+					std::string token;
+
+					//divided for commas
+					while (std::getline(ss, token, ';'))
+					{
+						tokens.push_back(token);
+					}
+
+					if (tokens.size()>1 && tokens.size()<4)
+					{
+						std::string label;
+						label = tokens[0];
+						
+						if (label == "FF"  || label == "AND"  || label == "NOT" || 
+							label == "OR"  || label == "XNOR" || label == "XOR" || 
+							label == "NOR" || label == "NAND" )
+						{
+							powerDef t_power;
+							t_power.gate = label;
+							
+							//there is only one powerloss
+							if (tokens.size() == 2)
+							{
+								//the second one has to be a number
+								if (stod(tokens[1]))
+								{
+									t_power.gate = tokens[0];
+									t_power.to0 = stod(tokens[1]);
+									t_power.to1 = stod(tokens[1]);							
+									_matrix_power.push_back(t_power);
+								}
+							}
+							else if (tokens.size() == 3)
+							{
+								if (stod(tokens[1]) && stod(tokens[2]))
+								{
+									t_power.gate = tokens[0];
+									t_power.to0 = stod(tokens[1]);
+									t_power.to1 = stod(tokens[2]);
+									_matrix_power.push_back(t_power);
+								}
+							}
+							else
+							{
+								std::cerr << "ERROR: syntax error at line: " << index;
+								isOK= false;
+							}
+						}
+					else {
+							std::cerr << "ERROR: Syntax error at line: " << index << std::endl;
+							isOK = false;
+						}
+						  
+					}
+					else {
+						std::cerr << "ERROR: Syntax error at line: " << index << std::endl;
+						isOK = false;
+					
+					}
+				}
+			}
+		}
+		stream_powerDescr.close();
+	}
+	std::vector <std::string> gates = { "AND", "OR", "XOR", "NAND", "NOT", "XNOR", "FF", "NOR" };
+	
+	//check if the gate are written more times
+	for (size_t i = 0; i < _matrix_power.size()-1; i++)
+	{
+		for (size_t j = i+1; j < _matrix_power.size(); j++)
+		{
+			if (_matrix_power[i].gate == _matrix_power[j].gate)
+			{
+				std::cerr << "ERROR: the gate " << _matrix_power[i].gate << " is defined too many times" << std::endl;
+				isOK= false;
+			}
+		}
+	}
+	//everything is correct then proceed to add the gate missing assuming their powerloss equal to 0
+	 if (isOK)
+	{
+
+		for (size_t j = 0; j < gates.size(); j++)
+		{ 
+			size_t count = 0;
+			for (size_t i = 0; i < _matrix_power.size(); i++)
+			{ 
+				if (gates[j]!=_matrix_power[i].gate)
+				{		
+					if (count==_matrix_power.size()-1)
+					{
+						powerDef t_pow;
+						t_pow.gate = gates[j];
+						t_pow.to0 = 0;
+						t_pow.to1 = 0;
+						_matrix_power.push_back(t_pow);
+					}
+					count++;
+				}
+				
+			}
+		}
+		return _matrix_power;
+	}
+	else
+	{
+		std::exit(EXIT_FAILURE);
+	} 
+	 
 }
 
 bool checkSignals() {

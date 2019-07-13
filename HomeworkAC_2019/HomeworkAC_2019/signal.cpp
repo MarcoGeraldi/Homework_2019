@@ -36,6 +36,7 @@ signal_output::signal_output(const std::string & _label, const bool & _value)
 	this->label = _label;
 	this->value = _value;
 	this->kind = SIGNAL_OUTPUT;
+	 
 }
 
 signal_output::signal_output(const std::string & _label, const std::string & _to_parse, const bool & _value)
@@ -44,6 +45,7 @@ signal_output::signal_output(const std::string & _label, const std::string & _to
 	this->value = _value;
 	this->label = _label;
 	this->to_parse = _to_parse;
+	 
 }
 
 
