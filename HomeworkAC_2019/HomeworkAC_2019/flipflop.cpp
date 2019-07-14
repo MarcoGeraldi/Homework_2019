@@ -58,14 +58,50 @@ std::string flipflop::FF_getLabel()
 
  void flipflop::calculateClk()
  {
-	 std::stringstream ss(FF_to_parse);
 	 std::string token;
-	 
-	 while (getline(ss, token, ' ') )
+	 std::string to_find = { "FF" };
+	 std::string cut;
+
+	 std::string use = FF_to_parse;
+	
+	 for (size_t i = 0; i <use.length(); i++)
 	 {
-		 if (token[0] == 'F' && token[1] == 'F')
+		 //look for FF
+		 if (FF_to_parse.substr(i, to_find.length()) == "FF")
 		 {
-			 FF_found.push_back(token);
+			 cut= use.substr(i, use.size()-i);
+			 std::stringstream s(cut);
+			 int pos_space = cut.find(" ");
+			 int pos_bracket = cut.find(")");
+
+			 //the first found was space
+			 if (pos_space > 0 && pos_bracket > 0)
+			 {
+				 if (pos_space<pos_bracket)
+				 {
+					 std::getline(s, token, ' ');
+					 FF_found.push_back(token);
+				 }
+				 else
+				 {
+					 std::getline(s, token, ')');
+					 FF_found.push_back(token);
+				 }
+			 }
+			 else if(pos_space>0 && pos_bracket<0)
+			 {
+				 std::getline(s, token, ' ');
+				 FF_found.push_back(token);
+			 }
+			 else if (pos_space<0 && pos_bracket>0)
+			 {
+				 std::getline(s, token, ')');
+				 FF_found.push_back(token);
+			 }
+			 else if (pos_bracket<0 && pos_space<0)
+			 {
+				 FF_found.push_back(cut);
+			 }
 		 }
 	 }
  
@@ -73,5 +109,11 @@ std::string flipflop::FF_getLabel()
 	 {
 		 clkNeeded = 1;
 	 }
+ }
+
+ void flipflop::setUndefined()
+ {
+	 this->Q.Set(SIGNAL_NOT_DEFINED);
+	 this->_Q.Set(SIGNAL_NOT_DEFINED);
  }
 

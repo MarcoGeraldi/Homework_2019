@@ -24,11 +24,12 @@ int main(){
 	}*/
 	filename_circuitDescr = "descrizione.txt";
 	std::vector <circuit> myCircuits = saveData();
-	myCircuits[0].simulation("input.txt", 4);
-	double c;
+	//myCircuits[0].simulation("input.txt", 4);
+	/*double c;
 	filename_powerDescr = "potenza.txt";
 	c=myCircuits[0].getPower();
-	
+
+	std::cout << c;*/
 	//std::cout << myCircuits[i].printPaths() << std::endl;
 	return 0;
 }
@@ -36,7 +37,7 @@ int main(){
 std::vector <circuit> saveData() {
 	
 	std::vector <circuit> circuit_list;
-
+	bool isOk = true;
 	//if the file is formatted correctly
 	if (checkSignals())
 	{
@@ -121,28 +122,97 @@ std::vector <circuit> saveData() {
 					}
 				}
 			}
-			// get output and paths
-			for (size_t j = 0; j < all_assign.size(); j++)
+		 
+			//checks for input errors
+			for (size_t k = 0; k < t_input.size(); k++)
 			{
+				if (t_input[k].getLabel()[0] == 'F' &&  t_input[k].getLabel()[1] == 'F')
+				{
+					std::cerr << "ERROR: " << t_input[k].getLabel() << " can't be defined as an  input" << std::endl;
+					isOk = false;
+				}
+
+				if (isdigit(t_input[k].getLabel()[0]))
+				{
+					std::cerr << "ERROR: " << t_input[k].getLabel() << " can't be defined as an  input because begin with a number or it's a number itself" << std::endl;
+					isOk = false;
+				}
+			}
+
+			//check for output errors
+			for (size_t j = 0; j < t_output.size(); j++)
+			{
+				for (size_t k = 0; k < t_input.size(); k++)
+				{
+					if (t_output[j].getLabel()==t_input[k].getLabel())
+					{
+						std::cerr << "ERROR: " << t_output[j].getLabel() << " is defined as an input and as an output" << std::endl;
+						isOk = false;
+					}
+
+					
+				}
+				if (t_output[j].getLabel()[0]=='F' && t_output[j].getLabel()[1] == 'F')
+				{
+					std::cerr << "ERROR: " << t_output[j].getLabel() << " can't be defined as an output" << std::endl;
+					isOk = false;
+				}
+				
+				if (isdigit(t_output[j].getLabel()[0]))
+				{
+					std::cerr << "ERROR: " << t_output[j].getLabel() << " can't be defined as an output because begin with a number or it's a number itself" << std::endl;
+					isOk = false;
+				}
+				
+				 
+			}
+
+			std::vector <std::string> to_check;
+
+			// get output and assign
+			for (size_t j = 0; j < all_assign.size(); j++)
+			{	
 				//outputPath t_temp;
 				if (_positionAssign[j] > _positionModule[i] && _positionAssign[j] < _positionEndmodule[i])
 				{
 					std::string assign_string, label_output;
 					int position = all_assign[j].find("assign");
 					int pos_equal = all_assign[j].find("=");
+					if (pos_equal<0)
+					{
+						std::cerr << "ERROR: equal not found" << std::endl;
+						isOk = false;
+					}
 					label_output = all_assign[j].substr(position + 7, pos_equal - (position + 7) - 1);  // output label
 					assign_string = all_assign[j].substr(pos_equal + 2, all_assign[j].length() - (pos_equal)); // string output
-
+					
 					for (size_t j = 0; j < t_output.size(); j++)
 					{
 						if (t_output[j].getLabel()==label_output)
 						{
 							t_output[j].setParse(assign_string);
 						}
+						to_check.push_back(label_output);
 					}
 				}
 			}
-
+			int found = 0;
+			for (size_t j = 0; j < to_check.size(); j++)
+			{
+				for (size_t k = 0; k < t_output.size(); k++)
+				{
+					if (t_output[k].getLabel()==to_check[j] )
+					{
+						found = 1;
+					}
+				}
+				if (found==0)
+				{
+					std::cerr << "ERROR: the output: " << to_check[j] <<" doesn't exist" << std::endl;
+					isOk = false;
+				}
+				found = 0;
+			}
 			//get FF
 			if (isSequential[i]==true)
 			{
@@ -153,6 +223,11 @@ std::vector <circuit> saveData() {
 						std::string label_FF, string_FF;
 						int pos_FF = all_FF[j].find("FF");
 						int pos_equal = all_FF[j].find("=");
+						if (pos_equal<0)
+						{
+							std::cerr << "ERROR: equal not found" << std::endl;
+							isOk = false;
+						}
 						label_FF = all_FF[j].substr(pos_FF, pos_equal - pos_FF - 1);
 						string_FF = all_FF[j].substr(pos_equal + 2, all_FF[j].length() - pos_equal);
 						flipflop FF(label_FF, string_FF);
@@ -171,6 +246,136 @@ std::vector <circuit> saveData() {
 							t_circuit.setInstance(all_instance[j]);
 						}
 					}
+					for (size_t i = 0; i < t_output.size(); i++)
+					{
+						//search for input or output not definited correctly
+						std::string ss_assign = t_output[i].getParse();
+						ss_assign.erase(remove(ss_assign.begin(), ss_assign.end(), ')'), ss_assign.end());
+						ss_assign.erase(remove(ss_assign.begin(), ss_assign.end(), '('), ss_assign.end());
+
+						std::vector < std::string > tokens;
+						std::string token;
+						std::stringstream to_split(ss_assign);
+						while (std::getline(to_split, token, ' '))
+						{
+							tokens.push_back(token);
+						}
+
+						for (size_t k = 0; k < tokens.size(); k++)
+						{
+							bool isInput = false;
+							bool isGate = false;
+							bool isOutput = false;
+							bool isFlipFlop = false;
+
+							for (size_t e = 0; e < t_input.size(); e++)
+							{
+								if (t_input[e].getLabel() == tokens[k])
+								{
+									isInput = true;
+								}
+							}
+
+							for (size_t e = 0; e < t_output.size(); e++)
+							{
+								if (t_output[e].getLabel() == tokens[k])
+								{
+									isOutput = true;
+								}
+							}
+
+							for (size_t e = 0; e < t_FF.size(); e++)
+							{
+								if (t_FF[e].FF_getLabel() == tokens[k])
+								{
+									isFlipFlop = true;
+								}
+							}
+							if (tokens[k] == "NOR" || tokens[k] == "OR" || tokens[k] == "AND" ||
+								tokens[k] == "XOR" || tokens[k] == "XNOR" || tokens[k] == "NAND" || tokens[k] == "NOT")
+							{
+								isGate = true;
+							}
+
+							if (isOutput)
+							{
+								std::cerr << "ERROR: can't solve because " << tokens[k] << " is an output" << std::endl;
+								isOk = false;
+							}
+
+							if (!isInput && !isGate && !isFlipFlop)
+							{
+								std::cerr << "ERROR: can't solve because " << tokens[k] << " not found" << std::endl;
+								isOk = false;
+							}
+
+						}
+					}
+					for (size_t i = 0; i < t_FF.size(); i++)
+					{
+						//search for input or output not definited correctly
+						std::string ss_assign = t_FF[i].FF_getParse();
+						ss_assign.erase(remove(ss_assign.begin(), ss_assign.end(), ')'), ss_assign.end());
+						ss_assign.erase(remove(ss_assign.begin(), ss_assign.end(), '('), ss_assign.end());
+
+						std::vector < std::string > tokens;
+						std::string token;
+						std::stringstream to_split(ss_assign);
+						while (std::getline(to_split, token, ' '))
+						{
+							tokens.push_back(token);
+						}
+
+						for (size_t k = 0; k < tokens.size(); k++)
+						{
+							bool isInput = false;
+							bool isGate = false;
+							bool isOutput = false;
+							bool isFlipFlop = false;
+
+							for (size_t e = 0; e < t_input.size(); e++)
+							{
+								if (t_input[e].getLabel() == tokens[k])
+								{
+									isInput = true;
+								}
+							}
+
+							for (size_t e = 0; e < t_output.size(); e++)
+							{
+								if (t_output[e].getLabel() == tokens[k])
+								{
+									isOutput = true;
+								}
+							}
+
+							for (size_t e = 0; e < t_FF.size(); e++)
+							{
+								if (t_FF[e].FF_getLabel() == tokens[k])
+								{
+									isFlipFlop = true;
+								}
+							}
+							if (tokens[k] == "NOR" || tokens[k] == "OR" || tokens[k] == "AND" ||
+								tokens[k] == "XOR" || tokens[k] == "XNOR" || tokens[k] == "NAND" || tokens[k] == "NOT")
+							{
+								isGate = true;
+							}
+
+							if (isOutput)
+							{
+								std::cerr << "ERROR: can't solve because " << tokens[k] << " is an output" << std::endl;
+								isOk = false;
+							}
+
+							if (!isInput && !isGate && !isFlipFlop)
+							{
+								std::cerr << "ERROR: can't solve because " << tokens[k] << " not found" << std::endl;
+								isOk = false;
+							}
+
+						}
+					}
 					circuit_list.push_back(t_circuit);
 				}
 				
@@ -185,6 +390,63 @@ std::vector <circuit> saveData() {
 							t_circuit.setInstance(all_instance[j]);
 						}
 					}
+					for (size_t i = 0; i < t_output.size(); i++)
+					{
+						//search for input or output not definited correctly
+						std::string ss_assign = t_output[i].getParse();
+						ss_assign.erase(remove(ss_assign.begin(), ss_assign.end(), ')'), ss_assign.end());
+						ss_assign.erase(remove(ss_assign.begin(), ss_assign.end(), '('), ss_assign.end());
+
+						std::vector < std::string > tokens;
+						std::string token;
+						std::stringstream to_split(ss_assign);
+						while (std::getline(to_split, token, ' '))
+						{
+							tokens.push_back(token);
+						}
+
+						for (size_t k = 0; k < tokens.size(); k++)
+						{
+							bool isInput = false;
+							bool isGate = false;
+							bool isOutput = false;
+
+							for (size_t e = 0; e < t_input.size(); e++)
+							{
+								if (t_input[e].getLabel() == tokens[k])
+								{
+									isInput = true;
+								}
+							}
+
+							for (size_t e = 0; e < t_output.size(); e++)
+							{
+								if (t_output[e].getLabel() == tokens[k])
+								{
+									isOutput = true;
+								}
+							}
+
+							if (tokens[k] == "NOR" || tokens[k] == "OR" || tokens[k] == "AND" ||
+								tokens[k] == "XOR" || tokens[k] == "XNOR" || tokens[k] == "NAND" || tokens[k] == "NOT")
+							{
+								isGate = true;
+							}
+
+							if (isOutput)
+							{
+								std::cerr << "ERROR: can't solve because " << tokens[k] << " is an output" << std::endl;
+								isOk = false;
+							}
+
+							if (!isInput && !isGate)
+							{
+								std::cerr << "ERROR: can't solve because " << tokens[k] << " not found" << std::endl;
+								isOk = false;
+							}
+
+						}
+					}
 					circuit_list.push_back(t_circuit);
 				}
 			}
@@ -197,6 +459,63 @@ std::vector <circuit> saveData() {
 					if (_positionInstance[j] > _positionModule[i] && _positionInstance[j] < _positionEndmodule[i])
 					{
 						t_circuit.setInstance(all_instance[j]);
+					}
+				}
+				for (size_t i = 0; i < t_output.size(); i++)
+				{
+					//search for input or output not definited correctly
+					std::string ss_assign = t_output[i].getParse();
+					ss_assign.erase(remove(ss_assign.begin(), ss_assign.end(), ')'), ss_assign.end());
+					ss_assign.erase(remove(ss_assign.begin(), ss_assign.end(), '('), ss_assign.end());
+
+					std::vector < std::string > tokens;
+					std::string token;
+					std::stringstream to_split(ss_assign);
+					while (std::getline(to_split, token, ' '))
+					{
+						tokens.push_back(token);
+					}
+
+					for (size_t k = 0; k < tokens.size(); k++)
+					{
+						bool isInput = false;
+						bool isGate = false;
+						bool isOutput = false;
+
+						for (size_t e = 0; e < t_input.size(); e++)
+						{
+							if (t_input[e].getLabel() == tokens[k])
+							{
+								isInput = true;
+							}
+						}
+
+						for (size_t e = 0; e < t_output.size(); e++)
+						{
+							if (t_output[e].getLabel() == tokens[k])
+							{
+								isOutput = true;
+							}
+						}
+
+						if (tokens[k] == "NOR" || tokens[k] == "OR" || tokens[k] == "AND" ||
+							tokens[k] == "XOR" || tokens[k] == "XNOR" || tokens[k] == "NAND" || tokens[k] == "NOT")
+						{
+							isGate = true;
+						}
+
+						if (isOutput)
+						{
+							std::cerr << "ERROR: can't solve because " << tokens[k] << " is an output" << std::endl;
+							isOk = false;
+						}
+
+						if (!isInput && !isGate)
+						{
+							std::cerr << "ERROR: can't solve because " << tokens[k] << " not found" << std::endl;
+							isOk = false;
+						}
+
 					}
 				}
 				circuit_list.push_back(t_circuit);
@@ -395,12 +714,17 @@ std::vector <circuit> saveData() {
 		{
 			circuit_list[i].createTree();
 		}
+		
+		if (isOk == false)
+		{
+			std::cerr << "ERROR: the file is not formatted correctly" << std::endl;
+			std::exit(EXIT_FAILURE);
+		}
 		return circuit_list;
 	}
-	else
-	{
-		std::exit(EXIT_FAILURE);
-	}
+
+	std::cerr << "ERROR: the file is not formatted correctly" << std::endl;
+	std::exit(EXIT_FAILURE);
 }
 
 

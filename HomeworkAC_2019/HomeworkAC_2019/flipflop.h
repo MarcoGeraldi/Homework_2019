@@ -13,6 +13,7 @@
 */
  
 #include "signal.h"
+
 class flipflop
 {
 private:
@@ -39,11 +40,12 @@ public:
 	int notFF_Read();
 
 	int getClkN();
-
 	void setClkN(const int & _need);
 
 	std::vector <std::string> getFound();
 
 	void calculateClk();
+
+	void setUndefined();
  };
 

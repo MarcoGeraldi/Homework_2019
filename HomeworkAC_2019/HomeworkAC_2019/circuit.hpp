@@ -280,9 +280,206 @@ inline void circuit::ClkNedd (flipflop & _flipf)
  inline double circuit::getPower()
  {
 	 std::vector <powerDef> powerLosses=checkPower();
+	 int max=0;
+
+	 for (size_t i = 0; i < output.size()-1; i++)
+	 {
+		 if (output[i].getClk()>output[i+1].getClk())
+		 {
+			 max = output[i].getClk();
+		 }
+	 }
 	 
+	 if (clk< max)
+	 {
+		 std::cerr << "ERROR: power is impossible to calculate because the clk given is not enough to set all output" << std::endl;
+		 return 0;
+	 }
+	 
+	 clk -= max;
+	 if (clk>simulation_input.size())
+	 {
+		 std::cerr << "ERROR: the clk is bigger than the input given" << std::endl;
+		 return 0;
+	 }
+	 for (size_t j = 0; j < FF.size(); j++)
+	 {
+		 powerMatrix FF_power;
+
+		 //for each clk save the valu eof each FF and solve their string 
+		 //in order to calculate the powerloss of each operation
+
+		 for (size_t k = 0; k < clk; k++)
+		 {
+
+			 std::string new_parse = FF[j].FF_getParse();
+			 int counter_p = getPositions(FF[j].FF_getParse(), "(").size();
+
+			 std::vector < int > not_vect;
+			 std::vector < int > and_vect;
+			 std::vector < int > or_vect;
+			 std::vector < int > xor_vect;
+			 std::vector < int > nand_vect;
+			 std::vector < int > nor_vect;
+			 std::vector < int > xnor_vect;
+			 std::vector <int  > FF_vect;
+
+			 //solve the sentence
+			 for (int i = 0; i < counter_p + 1; i++)
+			 {
+				 //get the positions of opened and closed brackets
+				 positionOpen = getPositions(new_parse, "(");
+				 positionClose = getPositions(new_parse, ")");
+
+
+				 size_t counterOpen = 0;
+				 size_t counterClose = 0;
+				 int flag = 0;
+
+				 //there are bracktes left
+				 if (positionOpen.size() != 0 && positionClose.size() != 0)
+				 {
+
+					 while (counterOpen < positionOpen.size() - 1 && flag == 0)
+					 {
+						 //find the inner brackets
+						 if (positionOpen[counterOpen] < positionClose[counterClose] && positionOpen[counterOpen + 1] < positionClose[counterClose])
+						 {
+							 counterOpen++;
+						 }
+						 else
+						 {
+							 flag = 1;
+						 }
+					 }
+
+					 //take the sentence inside the brackets
+					 std::string s = new_parse.substr(positionOpen[counterOpen] + 1, positionClose[counterClose] - positionOpen[counterOpen] - 1);
+
+					 std::stringstream ss(s);
+					 std::vector<std::string> tokens;
+					 std::string token;
+
+					 //divide the string by spaces
+					 while (std::getline(ss, token, ' '))
+					 {
+						 tokens.push_back(token);
+					 }
+
+					 int out_now;
+					 std::stringstream s_out;
+					 
+					 //solve the sentence
+					
+					 signal_output t_out = solve(tokens, simulation_input[k], simulation_FF[k]);
+
+					 out_now = t_out.Read();
+					 s_out << t_out.Read();
+					 
+
+					 //replace the inner bracket with the resolution of the boolean operator
+					 new_parse.replace(positionOpen[counterOpen], positionClose[counterClose] - positionOpen[counterOpen] + 1, s_out.str());
+
+					 positionClose.erase(positionClose.begin() + counterClose);
+					 positionOpen.erase(positionOpen.begin() + counterOpen);
+
+					 if (tokens[0] == "NOT")	not_vect.push_back(out_now);
+					 if (tokens[1] == "AND")	and_vect.push_back(out_now);
+					 if (tokens[1] == "NAND")	nand_vect.push_back(out_now);
+					 if (tokens[1] == "OR")		or_vect.push_back(out_now);
+					 if (tokens[1] == "XOR")	xor_vect.push_back(out_now);
+					 if (tokens[1] == "NOR")	nor_vect.push_back(out_now);
+					 if (tokens[1] == "XNOR")	xnor_vect.push_back(out_now);
+
+					 for (size_t l = 0; l < simulation_FF[k].size(); l++)
+					 {
+						 if (tokens[0] == simulation_FF[k][l].FF_getLabel());
+						 {
+							 FF_vect.push_back(simulation_FF[k][l].FF_Read());
+						 }
+						 if (tokens.size() == 3)
+						 {
+							 if (tokens[2] == simulation_FF[k][l].FF_getLabel())
+							 {
+								 FF_vect.push_back(simulation_FF[k][l].FF_Read());
+							 }
+						 }
+					 }
+
+				 }
+				 else
+				 {
+					 std::stringstream ss(new_parse);
+					 std::vector<std::string> tokens;
+					 std::string token;
+
+					 while (std::getline(ss, token, ' ')) //divide the string by space
+					 {
+						 tokens.push_back(token);
+					 }
+
+					 int out_now;
+					 std::stringstream s_out;
+
+					 //solve the sentence
+					signal_output t_out = solve(tokens, simulation_input[k], simulation_FF[k]);
+					out_now = t_out.Read();
+					s_out << t_out.Read();
+
+					 new_parse.replace(new_parse.begin(), new_parse.end(), s_out.str());
+
+					 if (tokens[0] == "NOT")	not_vect.push_back(out_now);
+					 if (tokens[1] == "AND")	and_vect.push_back(out_now);
+					 if (tokens[1] == "NAND")	nand_vect.push_back(out_now);
+					 if (tokens[1] == "OR")		or_vect.push_back(out_now);
+					 if (tokens[1] == "XOR")	xor_vect.push_back(out_now);
+					 if (tokens[1] == "NOR")	nor_vect.push_back(out_now);
+					 if (tokens[1] == "XNOR")	xnor_vect.push_back(out_now);
+
+					 for (size_t l = 0; l < simulation_FF[k].size(); l++)
+					 {
+						 if (tokens[0] == simulation_FF[k][l].FF_getLabel());
+						 {
+							 FF_vect.push_back(simulation_FF[k][l].FF_Read());
+						 }
+						 if (tokens.size() == 3)
+						 {
+							 if (tokens[2] == simulation_FF[k][l].FF_getLabel())
+							 {
+								 FF_vect.push_back(simulation_FF[k][l].FF_Read());
+							 }
+						 }
+					 }
+				 }
+			 }
+			 
+			 //save the value of each operations for each clk
+			 if (not_vect.size() > 0)	FF_power.vect_not.push_back(not_vect);
+			 if (and_vect.size() > 0)	FF_power.vect_and.push_back(and_vect);
+			 if (nand_vect.size() > 0)	FF_power.vect_nand.push_back(nand_vect);
+			 if (nor_vect.size() > 0)	FF_power.vect_nor.push_back(nor_vect);
+			 if (or_vect.size() > 0)	FF_power.vect_or.push_back(or_vect);
+			 if (xnor_vect.size() > 0)	FF_power.vect_xnor.push_back(xnor_vect);
+			 if (xor_vect.size() > 0)	FF_power.vect_xor.push_back(xor_vect);
+			 if (FF_vect.size() > 0)	FF_power.vect_FF.push_back(FF_vect);
+
+		 }
+		 //calculate the total powerloss
+		 for (size_t k = 0; k < powerLosses.size(); k++)
+		 {
+			 if (powerLosses[k].gate == "NOT")	power += t_power(FF_power.vect_not, powerLosses[k].to1, powerLosses[k].to0);
+			 if (powerLosses[k].gate == "AND")	power += t_power(FF_power.vect_and, powerLosses[k].to1, powerLosses[k].to0);
+			 if (powerLosses[k].gate == "NAND") power += t_power(FF_power.vect_nand, powerLosses[k].to1, powerLosses[k].to0);
+			 if (powerLosses[k].gate == "NOR")	power += t_power(FF_power.vect_nor, powerLosses[k].to1, powerLosses[k].to0);
+			 if (powerLosses[k].gate == "OR")	power += t_power(FF_power.vect_or, powerLosses[k].to1, powerLosses[k].to0);
+			 if (powerLosses[k].gate == "XNOR") power += t_power(FF_power.vect_xnor, powerLosses[k].to1, powerLosses[k].to0);
+			 if (powerLosses[k].gate == "XOR")	power += t_power(FF_power.vect_xor, powerLosses[k].to1, powerLosses[k].to0);
+			 if (powerLosses[k].gate == "FF")	power += t_power(FF_power.vect_FF, powerLosses[k].to1, powerLosses[k].to0);
+		 }
+	 }
 
 	 int isFF = 0;
+
 	 if (FF.size()>0)
 	 {
 		 isFF = 1;
@@ -471,8 +668,6 @@ inline void circuit::ClkNedd (flipflop & _flipf)
 		 }
 	 }
 
-
-
 	 return this->power;
 }
 	 
@@ -525,11 +720,32 @@ inline void circuit::ClkNedd (flipflop & _flipf)
 
 		 if (clk <= vect_matrix.size())
 		 {
+			 //get the clk needed for each FF
 			 for (size_t j = 0; j < FF.size(); j++)
 			 {
 				 ClkNedd(FF[j]);
 			 }
-			 
+			 //get the clk needed for each output that contains a FF 
+			 for (size_t j = 0; j < output.size(); j++)
+			 {
+				 int max = 0;
+
+				 for (size_t i = 0; i < output[j].get_FF().size(); i++)
+				 {
+					 for (size_t k = 0; k < FF.size(); k++)
+					 {
+						 if (output[j].get_FF()[i] == FF[k].FF_getLabel())
+						 {
+							 if (FF[k].getClkN() > max)
+							 {
+								 max = FF[k].getClkN();
+							 }
+						 }
+					 }
+				 }
+				 output[j].setClk(max);
+			 }
+
 			 for (int i = 0; i < clk; i++)
 			 {
 				 std::vector <signal_input> t_vect;
@@ -547,8 +763,17 @@ inline void circuit::ClkNedd (flipflop & _flipf)
 				 {
 					 if (FF[j].FF_getParse().size()!=0)
 					 {
-						 flipflop t_FF(FF[j].FF_getLabel(), getValue(FF[j].FF_getParse(), t_vect, FF), clk);
-						 vect_FF.push_back(t_FF);
+						 if (FF[j].getClkN()>(i+1))
+						 {
+							 FF[j].setUndefined();
+							 vect_FF.push_back(FF[j]);
+						 }
+						 else
+						 {
+							 flipflop t_FF(FF[j].FF_getLabel(), getValue(FF[j].FF_getParse(), t_vect, FF), clk);
+							 vect_FF.push_back(t_FF);
+						 }
+						
 					 }
 				 }
 				 simulation_FF.push_back(vect_FF);
@@ -559,14 +784,22 @@ inline void circuit::ClkNedd (flipflop & _flipf)
 				 {
 					 if (output[j].getParse().size()!=0)
 					 {
-						 //takes the input and give back the value of the output
-						 signal_output t_output(output[j].getLabel(), getValue(output[j].getParse(), t_vect, vect_FF));
-						 vect_output.push_back(t_output);
+						 if (output[j].getClk()>(i+1))
+						 {
+							 output[j].Set(SIGNAL_NOT_DEFINED);
+							 vect_output.push_back(output[j]);
+						 }
+						 else
+						 {
+							 //takes the input and give back the value of the output
+							 signal_output t_output(output[j].getLabel(), getValue(output[j].getParse(), t_vect, vect_FF));
+							 vect_output.push_back(t_output);
+						 }
 					 }
 				 }
 				 simulation_output.push_back(vect_output); 
 			 }
-			/* for (int i = 0; i < simulation_output.size(); i++)
+			/*for (int i = 0; i < simulation_output.size(); i++)
 			 {
 				 for (size_t j = 0; j < simulation_output[i].size(); j++)
 				 {
@@ -661,6 +894,7 @@ inline void circuit::ClkNedd (flipflop & _flipf)
 				 btree *_head;
 				 //create the tree
 				 _head = builtTree(output[i].getParse());
+
 				 //calculate the path
 				 t_path = Path(_head);
 				 //calculate min, max, coni
@@ -697,50 +931,67 @@ inline void circuit::ClkNedd (flipflop & _flipf)
 
 			 btree * F_head;
 			 F_head = builtTree(FF[e].FF_getParse());
-			 f_path = Path(F_head);
-
-			 int flag = 0;
-			 //if an output contains FF we have to add also the path of the FF in order to find min, max and coni
-			 for (size_t i = 0; i < f_path.size(); i++)
+			 if (F_head->left==NULL && F_head->right==NULL)
 			 {
-				 if (flag==1 && i!=0)
-				 {
-					 i=0;
-				 }
-				 for (size_t j = 0; j < circuit_FF.size(); j++)
-				 {
-					 if (f_path[i].label == circuit_FF[j].label)
-					 {
-						 for (size_t k = 0; k < circuit_FF[j].paths.size(); k++)
-						 {
-							 for (size_t l = 0; l < circuit_FF[j].paths[k].size(); l++)
-							 {
-								 calculatepath temp;
-								 //add to the FF paths the path between FF and the output
-								 circuit_FF[j].paths[k][l].path += f_path[i].path;
-								 temp.label = circuit_FF[j].paths[k][l].label;
-								 temp.path = circuit_FF[j].paths[k][l].path;
-								 f_path.push_back(temp);
-							 }
-						 }
-						 f_path.erase(f_path.begin() + i);
-						 flag = 1;
-					 }
-					 else
-					 {
-						 flag = 0;
-					 }
-				 }
+				 calculatepath tt;
+				 tt.label = F_head->value;
+				 tt.path = 0;
+				 std::vector <calculatepath> vect;
+				 vect.push_back(tt);
+				 t_paths.min_Path.push_back(F_head->value);
+				 t_paths.max_Path.push_back(F_head->value);
+				 std::vector <std::string> t;
+				 t.push_back(F_head->value);
+				 t_paths.coni_Logici.push_back(t);
+				 t_paths.paths.push_back(vect);
 			 }
-			 f_min = findMin(f_path);
-			 f_max = findMax(f_path);
-			 f_coni = coniLogici(f_path);
+			 else
+			 {
+				 f_path = Path(F_head);
 
-			 t_paths.min_Path=f_min;
-			 t_paths.max_Path=f_max;
-			 t_paths.coni_Logici.push_back(f_coni);
-			 t_paths.paths.push_back(f_path);
-			 delete_tree(F_head);
+				 int flag = 0;
+				 //if an output contains FF we have to add also the path of the FF in order to find min, max and coni
+				 for (size_t i = 0; i < f_path.size(); i++)
+				 {
+					 if (flag == 1 && i != 0)
+					 {
+						 i = 0;
+					 }
+					 for (size_t j = 0; j < circuit_FF.size(); j++)
+					 {
+						 if (f_path[i].label == circuit_FF[j].label)
+						 {
+							 for (size_t k = 0; k < circuit_FF[j].paths.size(); k++)
+							 {
+								 for (size_t l = 0; l < circuit_FF[j].paths[k].size(); l++)
+								 {
+									 calculatepath temp;
+									 //add to the FF paths the path between FF and the output
+									 f_path[i].path += circuit_FF[j].paths[k][l].path;
+									 temp.label = circuit_FF[j].paths[k][l].label;
+									 temp.path = f_path[i].path;
+									 f_path.push_back(temp);
+								 }
+							 }
+							 f_path.erase(f_path.begin() + i);
+							 flag = 1;
+						 }
+						 else
+						 {
+							 flag = 0;
+						 }
+					 }
+				 }
+				 f_min = findMin(f_path);
+				 f_max = findMax(f_path);
+				 f_coni = coniLogici(f_path);
+
+				 t_paths.min_Path = f_min;
+				 t_paths.max_Path = f_max;
+				 t_paths.coni_Logici.push_back(f_coni);
+				 t_paths.paths.push_back(f_path);
+				 delete_tree(F_head);
+			 }
 			 circuit_FF.push_back(t_paths);
 		 }
 	 }
@@ -759,52 +1010,69 @@ inline void circuit::ClkNedd (flipflop & _flipf)
 				 Paths t_paths;
 				 t_paths.label = output[e].getLabel();
 
-				 btree *_head;
-				 _head = builtTree(output[e].getParse());
-				 t_path = Path(_head);
-				 int m_flag = 0;
-				 //if an output contains FF we have to add also the path of the FF in order to find min, max and coni
-				 for (size_t i = 0; i < t_path.size(); i++)
+				 if (output[e].get_FF().size()==1)
 				 {
-					 if (m_flag == 1 && i != 0)
-					 {
-						 i = 0;
-					 }
 					 for (size_t j = 0; j < circuit_FF.size(); j++)
 					 {
-						 if (t_path[i].label == circuit_FF[j].label)
+						 if (output[e].get_FF()[0]==circuit_FF[j].label)
 						 {
-							 for (size_t k = 0; k < circuit_FF[j].paths.size(); k++)
-							 {
-								 for (size_t l = 0; l < circuit_FF[j].paths[k].size(); l++)
-								 {
-									 calculatepath temp;
-									 //add to the FF paths the path between FF and the output
-									 circuit_FF[j].paths[k][l].path += t_path[i].path;
-									 temp.label = circuit_FF[j].paths[k][l].label;
-									 temp.path = circuit_FF[j].paths[k][l].path;
-									 t_path.push_back(temp);
-								 }
-							 }
-							 t_path.erase(t_path.begin() + i);
-							 m_flag = 1;
-						 }
-						 else
-						 {
-							 m_flag = 0;
+							 t_paths.paths = circuit_FF[j].paths;
+							 t_paths.min_Path = circuit_FF[j].min_Path;
+							 t_paths.max_Path = circuit_FF[j].max_Path;
+							 t_paths.coni_Logici = circuit_FF[j].coni_Logici;
 						 }
 					 }
 				 }
-				 min = findMin(t_path);
-				 max = findMax(t_path);
-				 coni = coniLogici(t_path);
+				 else
+				 {
+					 btree *_head;
+					 _head = builtTree(output[e].getParse());
+					 t_path = Path(_head);
+					 int m_flag = 0;
 
-				 t_paths.min_Path=min;
-				 t_paths.max_Path=max;
-				 t_paths.coni_Logici.push_back(coni);
-				 t_paths.paths.push_back(t_path);
-				 delete_tree(_head);
+					 //if an output contains FF we have to add also the path of the FF in order to find min, max and coni
+					 for (size_t i = 0; i < t_path.size(); i++)
+					 {
+						 if (m_flag == 1 && i != 0)
+						 {
+							 i = 0;
+						 }
+						 for (size_t j = 0; j < circuit_FF.size(); j++)
+						 {
+							 if (t_path[i].label == circuit_FF[j].label)
+							 {
+								 for (size_t k = 0; k < circuit_FF[j].paths.size(); k++)
+								 {
+									 for (size_t l = 0; l < circuit_FF[j].paths[k].size(); l++)
+									 {
+										 calculatepath temp;
+										 //add to the FF paths the path between FF and the output
+										 circuit_FF[j].paths[k][l].path += t_path[i].path;
+										 temp.label = circuit_FF[j].paths[k][l].label;
+										 temp.path = circuit_FF[j].paths[k][l].path;
+										 t_path.push_back(temp);
+									 }
+								 }
+								 t_path.erase(t_path.begin() + i);
+								 m_flag = 1;
+							 }
+							 else
+							 {
+								 m_flag = 0;
+							 }
+						 }
+					 }
+					 min = findMin(t_path);
+					 max = findMax(t_path);
+					 coni = coniLogici(t_path);
 
+					 t_paths.min_Path = min;
+					 t_paths.max_Path = max;
+					 t_paths.coni_Logici.push_back(coni);
+					 t_paths.paths.push_back(t_path);
+					 delete_tree(_head);
+				 }
+				
 				 circuit_output.push_back(t_paths);
 			 }
 		 }

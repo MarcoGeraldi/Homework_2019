@@ -41,9 +41,13 @@ signal_output solve(std::vector <std::string> &_toSolve, const std::vector<signa
 	signal_input sig1;
 	signal_input sig2;
 	signal_output out;
-
+	//The sentence is empty
+	if (_toSolve.size() == 0) {
+		std::cerr << "ERROR: can't solve the output" << std::endl;
+		std::exit(EXIT_FAILURE);
+	}
 	//there is NOT in the sentence
-	if (_toSolve.size()==2)
+	else if (_toSolve.size()==2)
 	{
 		//if are already solved or are directly numbers
 		if (isdigit(_toSolve[1][0]))
@@ -62,12 +66,25 @@ signal_output solve(std::vector <std::string> &_toSolve, const std::vector<signa
 			}
 
 		}
-
+		for (size_t i = 0; i < flipflops.size(); i++)
+		{
+			// if they are input signals
+			if (flipflops[i].FF_getLabel() == _toSolve[1])
+			{
+				//cout << "right signal is char " << signals[i].Read() << endl;
+				sig1.Set(flipflops[i].FF_Read());
+			}
+		}
+		
 		if (_toSolve[0] == "NOT") { NOT not_gate(sig1);	out.Set(not_gate.Read()); }
+		else {
+			std::cerr << "ERROR: can't solve the sentence" << std::endl;
+			std::exit(EXIT_FAILURE);
+		}
 		
 	}
-	//there are boolean operators except NOT
-	else
+	//there are boolean operators except NOT	
+	else if (_toSolve.size() == 3)	
 	{
 		//if are already solved or are directly numbers
 		if (isdigit(_toSolve[0][0]))
@@ -116,16 +133,45 @@ signal_output solve(std::vector <std::string> &_toSolve, const std::vector<signa
 		std::vector<signal_input> sig;
 		sig.push_back(sig1);
 		sig.push_back(sig2);
-
-		if (_toSolve[1] == "AND")	{ AND and_gate(sig);	out.Set(and_gate.Read()); }
-		if (_toSolve[1] == "OR")	{ OR or_gate(sig);		out.Set(or_gate.Read()); }
-		if (_toSolve[1] == "NOR")	{ NOR nor_gate(sig);	out.Set(nor_gate.Read()); }
-		if (_toSolve[1] == "XOR")	{ XOR xor_gate(sig);	out.Set(xor_gate.Read()); }
-		if (_toSolve[1] == "NAND")	{ NAND nand_gate(sig);	out.Set(nand_gate.Read()); }
-		if (_toSolve[1] == "XNOR")	{ XNOR xnor_gate(sig);	out.Set(xnor_gate.Read()); }
-	}
 	
+		if (_toSolve[1] == "AND")	{ AND and_gate(sig);	out.Set(and_gate.Read()); }
+		else if (_toSolve[1] == "OR")	{ OR or_gate(sig);		out.Set(or_gate.Read()); }
+		else if (_toSolve[1] == "NOR")	{ NOR nor_gate(sig);	out.Set(nor_gate.Read()); }
+		else if (_toSolve[1] == "XOR")	{ XOR xor_gate(sig);	out.Set(xor_gate.Read()); }
+		else if (_toSolve[1] == "NAND")	{ NAND nand_gate(sig);	out.Set(nand_gate.Read()); }
+		else if (_toSolve[1] == "XNOR")	{ XNOR xnor_gate(sig);	out.Set(xnor_gate.Read()); }
+		else {
+			std::cerr << "ERROR: can't solve the sentence" << std::endl;
+			std::exit(EXIT_FAILURE);
+		}
+	}
+	//there is ony one signal and it's the flipflop output
+	else if (_toSolve.size() == 1) {
+		for (size_t i = 0; i < signals.size(); i++)
+		{
+			if (_toSolve[0]==signals[i].getLabel())
+			{
+				out.Set(signals[i].Read());
+				return out;
+			}
+		}
 
+		for (size_t i = 0; i < flipflops.size(); i++)
+		{
+			if (_toSolve[0] == flipflops[i].FF_getLabel())
+			{
+				out.Set(flipflops[i].FF_Read());
+				return out;
+			}
+			 
+		}
+		std::cerr << "ERROR: flipflop " << _toSolve[0] << " not defined" << std::endl;
+	}
+	// in any other case
+	else {
+		std::cerr << "ERROR: can't solve the sentence" << std::endl;
+		std::exit(EXIT_FAILURE);
+	}
 	return out;
 }
 //Solve a sentence without FF
@@ -138,9 +184,13 @@ signal_output solve(std::vector <std::string> &_toSolve, const std::vector<signa
 	signal_input sig1;
 	signal_input sig2;
 	signal_output out;
-
+	//The sentence is empty
+	if (_toSolve.size() == 0) {
+		std::cerr << "ERROR: can't solve the output" << std::endl;
+		std::exit(EXIT_FAILURE);
+	}
 	//there is NOT in the sentence
-	if (_toSolve.size() == 2)
+	else if (_toSolve.size() == 2)
 	{
 		//if are already solved or are directly numbers
 		if (isdigit(_toSolve[1][0]))
@@ -159,12 +209,16 @@ signal_output solve(std::vector <std::string> &_toSolve, const std::vector<signa
 			}
 
 		}
-
+		
 		if (_toSolve[0] == "NOT") { NOT not_gate(sig1);	out.Set(not_gate.Read()); }
+		else {
+			std::cerr << "ERROR: can't solve the sentence" << std::endl;
+			std::exit(EXIT_FAILURE);
+		}
 
 	}
 	//there are boolean operators except NOT
-	else
+	else if (_toSolve.size() == 3)
 	{
 		//if are already solved or are directly numbers
 		if (isdigit(_toSolve[0][0]))
@@ -201,13 +255,20 @@ signal_output solve(std::vector <std::string> &_toSolve, const std::vector<signa
 		sig.push_back(sig2);
 
 		if (_toSolve[1] == "AND") { AND and_gate(sig);		out.Set(and_gate.Read());	}
-		if (_toSolve[1] == "OR")  { OR or_gate(sig);		out.Set(or_gate.Read());	}
-		if (_toSolve[1] == "NOR") { NOR nor_gate(sig);		out.Set(nor_gate.Read());	}
-		if (_toSolve[1] == "XOR") { XOR xor_gate(sig);		out.Set(xor_gate.Read());	}
-		if (_toSolve[1] == "NAND") { NAND nand_gate(sig);	out.Set(nand_gate.Read());	}
-		if (_toSolve[1] == "XNOR") { XNOR xnor_gate(sig);	out.Set(xnor_gate.Read());  }
+		else if (_toSolve[1] == "OR")  { OR or_gate(sig);		out.Set(or_gate.Read());	}
+		else if (_toSolve[1] == "NOR") { NOR nor_gate(sig);		out.Set(nor_gate.Read());	}
+		else if (_toSolve[1] == "XOR") { XOR xor_gate(sig);		out.Set(xor_gate.Read());	}
+		else if (_toSolve[1] == "NAND") { NAND nand_gate(sig);	out.Set(nand_gate.Read());	}
+		else if (_toSolve[1] == "XNOR") { XNOR xnor_gate(sig);	out.Set(xnor_gate.Read());  }
+		else {
+			std::cerr << "ERROR: can't solve the sentence" << std::endl;
+			std::exit(EXIT_FAILURE);
+		}
 	}
-
+	else {
+		std::cerr << "ERROR: can't solve the sentence" << std::endl;
+		std::exit(EXIT_FAILURE);
+	}
 
 	return out;
 }

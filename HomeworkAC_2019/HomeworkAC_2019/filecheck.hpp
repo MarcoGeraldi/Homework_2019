@@ -234,7 +234,8 @@ bool check_circuitDescr()
 				_positionOpenBracket.push_back(index);
 			}
 		if ((line.find("FF") != std::string::npos && line.find("assign") == std::string::npos) &&
-			(line.find("FF") != std::string::npos && line.find("instance") == std::string::npos))
+			(line.find("FF") != std::string::npos && line.find("instance") == std::string::npos) &&
+			(line.find("FF") != std::string::npos && line.find("output") == std::string::npos))
 				//look for a flipflop but not in the sentence with assign and instance
 			{
 				std::istringstream _stream_temp(line); //save the line in a stream
@@ -626,19 +627,17 @@ bool checkInput(std::vector <std::string> & _to_check) {
 
 bool checkOutput(std::vector <std::string> & _to_check) 
 {
-
 	for (size_t i = 0; i < _to_check.size(); i++)
 	{
 
 		for (size_t j = 0; j < _to_check[i].length(); j++)//for each string that contains output
 		{
 			//output can just contain letters and commas 
-			if (isalpha(_to_check[i][j]) == 0 && _to_check[i][j] != ',' &&  _to_check[i][j] != ' ' && _to_check[i][j] != '\t')
+			if (isalpha(_to_check[i][j]) == 0 && _to_check[i][j] != ',' &&  _to_check[i][j] != ' ' && _to_check[i][j] != '\t' && isdigit(_to_check[i][j]) == 0)
 			{
 				std::cerr << "ERROR: the output is not formatted correctly" << std::endl;
 				return false;
 			}
-			
 		}
 
 		for (size_t i = 0; i < _to_check.size(); i++)
@@ -872,7 +871,8 @@ std::vector <powerDef> checkPower() {
 			for (size_t i = 0; i < _matrix_power.size(); i++)
 			{ 
 				if (gates[j]!=_matrix_power[i].gate)
-				{		
+				{	
+					count++;
 					if (count==_matrix_power.size()-1)
 					{
 						powerDef t_pow;
@@ -881,7 +881,7 @@ std::vector <powerDef> checkPower() {
 						t_pow.to1 = 0;
 						_matrix_power.push_back(t_pow);
 					}
-					count++;
+					
 				}
 				
 			}

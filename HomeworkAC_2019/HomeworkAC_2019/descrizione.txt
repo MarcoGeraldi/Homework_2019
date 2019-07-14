@@ -1,9 +1,11 @@
 module circuito1 (
 clk
 input l, m
-output x, y
+output x, z, y
 );
 FF1 = NOT l
-assign x = FF1 OR l
-assign y = l OR m
+FF2 = l
+FF3 = (FF89 OR l) OR (1)
+assign x = m AND FF5
+assign y = FF1 OR 6
 endmodule

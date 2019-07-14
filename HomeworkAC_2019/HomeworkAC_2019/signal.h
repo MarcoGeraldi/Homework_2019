@@ -53,10 +53,15 @@ public:
 	std::string getParse();
 	int getValue();
 	void setParse(const std::string & parse);
+	void FF_inside();
+	std::vector <std::string> get_FF();
+	void setClk(const int &_max);
+	int getClk();
  
 private:
 	std::string to_parse;
-	 
+	std::vector <std::string> FF_found;
+	int clkNeed;
 };
  
 //input signal

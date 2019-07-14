@@ -114,10 +114,24 @@ btree * builtTree(const std::string & _input_string) {
 			{
 				vect_temp.push_back(string_temp);
 			}
-
+			if (vect_temp.size()==0)
+			{
+				std::cerr << "ERROR: empy brackets" << std::endl;
+				std::exit(EXIT_FAILURE);
+			}
+			if (vect_temp.size()==1)
+			{
+				btree * root = newNode(vect_temp[0]);
+				return root;
+			}
 			//if in the sentence there is a NOT then it enters in this if
 			if (vect_temp.size()==2)
 			{
+				if (vect_temp[0] != "NOT")
+				{
+					std::cerr << "ERROR: operator " << vect_temp[0] <<" not defined " << std::endl;
+					std::exit(EXIT_FAILURE);
+				}
 				//there was a brackets before so no need of a new node but it's saved in the special vector
 				if (vect_temp[1]==special_character)
 				{
@@ -143,9 +157,18 @@ btree * builtTree(const std::string & _input_string) {
 			//there are boolean operators different from NOT
 			else
 			{
+				if (vect_temp[1] != "NOR"	&& vect_temp[1] != "OR"		&& vect_temp[1] != "AND"	&&
+					vect_temp[1] != "XOR"	&& vect_temp[1] != "XNOR"	&& vect_temp[1] != "NAND") 
+				{
+					std::cerr << "ERROR: operator " << vect_temp[1] << " not defined " << std::endl;
+					std::exit(EXIT_FAILURE);
+				}
+
 				//the boolean operator was between two bracktes
 				if (vect_temp[0] == special_character && vect_temp[2] == special_character)
 				{
+					int cc = 0;
+
 					btree * root = newNode(vect_temp[1]);
 
 					//the right one was the last saved in the special vector
@@ -218,7 +241,7 @@ btree * builtTree(const std::string & _input_string) {
 
 			//take the sentence inside the brackets
 			std::string s = new_input.substr(positionOpenB[counterOpen] + 1, positionCloseB[counterClose] - positionOpenB[counterOpen] - 1);
-			
+
 			std::stringstream stream_temp(s);
 			std::vector<std::string> vect_temp;
 			std::string string_temp;
@@ -228,10 +251,19 @@ btree * builtTree(const std::string & _input_string) {
 			{
 				vect_temp.push_back(string_temp);
 			}
-
+			if (vect_temp.size() == 0)
+			{
+				std::cerr << "ERROR: empy brackets" << std::endl;
+				std::exit(EXIT_FAILURE);
+			}
 			// in the sentece there is NOT
 			if (vect_temp.size()==2)
 			{
+				if (vect_temp[0] != "NOT")
+				{
+					std::cerr << "ERROR: operator " << vect_temp[0] << " not defined " << std::endl;
+					std::exit(EXIT_FAILURE);
+				}
 				//on the right of NOT there was a bracktes that was replace
 				if (vect_temp[1]==special_character)
 				{
@@ -275,10 +307,23 @@ btree * builtTree(const std::string & _input_string) {
 					positionOpenB.erase(positionOpenB.begin() + counterOpen);
 				}
 			}
-
+			if (vect_temp.size()==1)
+			{
+				std::cerr << "ERROR: syntax error" << std::endl;
+				std::exit(EXIT_FAILURE);
+			}
 			//there are just boolean operators exept NOT inside the sentence
 			else
 			{
+				if (vect_temp.size()==3)
+				{
+					if (vect_temp[1] != "NOR"	&& vect_temp[1] != "OR"		&& vect_temp[1] != "AND"	&&
+						vect_temp[1] != "XOR"	&& vect_temp[1] != "XNOR"	&& vect_temp[1] != "NAND")
+					{
+						std::cerr << "ERROR: operator " << vect_temp[1] << " not defined " << std::endl;
+						std::exit(EXIT_FAILURE);
+					}
+				}
 				//on the boolean operator's left there were brackets
 				if (!(vect_temp[0] == special_character && vect_temp[2] == special_character) && vect_temp[0] == special_character)
 				{
@@ -553,7 +598,7 @@ std::vector <std::string> coniLogici(const std::vector <calculatepath> &_to_calc
 	
 	std::vector <std::string> input;
 	
-	for (size_t i = 0; i < _to_calculate.size()-1; i++)
+	for (size_t i = 0; i < _to_calculate.size(); i++)
 	{
 		input.push_back(_to_calculate[i].label);
 	}
