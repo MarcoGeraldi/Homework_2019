@@ -1,12 +1,13 @@
 #pragma once
 #include "btree.hpp"
-#include "stringParser.hpp"
+#include <iomanip>
 
 struct Instance {
 	std::string label_circuitFrom;
 	std::vector <std::string> from_circuit;
 	std::vector <std::string> to_circuit;
 };
+
 struct powerMatrix {
 	std::vector < std::vector < int > > vect_and;
 	std::vector < std::vector < int	> > vect_or;
@@ -32,7 +33,7 @@ public:
 	std::string getLabel();
 
 
-	std::vector <std::vector <signal_output>> simulation(const std::string & file_name, const long int &_clk=0);
+	std::vector <std::vector <signal_output>> simulation(const std::string & file_name, const long int &_clk=1);
 
 	std::vector<Instance> getInstance();
 
@@ -45,6 +46,7 @@ public:
 	void setInstance(std::string & _instance);
 
 	bool getComposed();
+	bool getSequential();
 
 	double getPower();
 
@@ -131,17 +133,22 @@ circuit::circuit(	const std::string & _label,
  inline std::string circuit::printMin()
 {
 	 std::stringstream min_stream;
+	 min_stream << "*******************************************************" << std::endl;
+	 min_stream << "************** Printing Minimum Paths *****************" << std::endl;
+	 min_stream << "*******************************************************" << std::endl;
+
 	 for (size_t i = 0; i < circuit_output.size(); i++)
 	 {
 		 for (size_t j = 0; j < circuit_output[i].min_Path.size(); j++)
 		 {
-			 min_stream << "label: " << circuit_output[i].label << std::endl;
+			 min_stream <<std::setw(10)<<  "label: " << std::setfill(' ') << circuit_output[i].label << std::setw(10)  << "min: ";
 
 			 for (int k = 0; k < circuit_output[i].min_Path[j].size(); k++)
 			 {
-				 min_stream << "min: " << circuit_output[i].min_Path[j][k] << std::endl;
+				 min_stream  << circuit_output[i].min_Path[j][k] << " " << std::setw(10);
 			 }
 
+			 min_stream << std::endl;
 		 }
 	 }
 	 return min_stream.str();
@@ -150,17 +157,22 @@ circuit::circuit(	const std::string & _label,
  inline std::string circuit::printMax()
  {
 	 std::stringstream max_stream;
+	 max_stream << "*******************************************************" << std::endl;
+	 max_stream << "************** Printing Maximum Paths *****************" << std::endl;
+	 max_stream << "*******************************************************" << std::endl;
+
 	 for (size_t i = 0; i < circuit_output.size(); i++)
 	 {
 		 for (size_t j = 0; j < circuit_output[i].max_Path.size(); j++)
 		 {
-			 max_stream << "label: " << circuit_output[i].label << std::endl;
+			 max_stream << std::setw(10) << "label: " << std::setfill(' ') << circuit_output[i].label << std::setw(10) << "max: ";
 
 			 for (int k = 0; k < circuit_output[i].max_Path[j].size(); k++)
 			 {
-				 max_stream << "max: " << circuit_output[i].max_Path[j][k] << std::endl;
+				 max_stream << circuit_output[i].max_Path[j][k] << " " << std::setw(10);
 			 }
 
+			 max_stream << std::endl;
 		 }
 	 }
 	 return max_stream.str();
@@ -169,17 +181,22 @@ circuit::circuit(	const std::string & _label,
  inline std::string circuit::printConiLogici()
  {
 	 std::stringstream coniLogici_stream;
+	 coniLogici_stream << "*******************************************************" << std::endl;
+	 coniLogici_stream << "************** Printing Logical Cones *****************" << std::endl;
+	 coniLogici_stream << "*******************************************************" << std::endl;
+
 	 for (size_t i = 0; i < circuit_output.size(); i++)
 	 {
 		 for (size_t j = 0; j < circuit_output[i].coni_Logici.size(); j++)
 		 {
-			 coniLogici_stream << "label: " << circuit_output[i].label << std::endl;
+			 coniLogici_stream << std::setw(10) << "label: " << std::setfill(' ') << circuit_output[i].label << std::setw(10) << "max: ";
 
 			 for (int k = 0; k < circuit_output[i].coni_Logici[j].size(); k++)
 			 {
-				 coniLogici_stream << "coni logici: " << circuit_output[i].coni_Logici[j][k] << std::endl;
+				 coniLogici_stream << circuit_output[i].coni_Logici[j][k] << " " << std::setw(10);
 			 }
 
+			 coniLogici_stream << std::endl;
 		 }
 	 }
 	 return coniLogici_stream.str();
@@ -201,6 +218,11 @@ circuit::circuit(	const std::string & _label,
  inline bool circuit::getComposed()
  {
 	 return this->isComposted;
+ }
+
+ inline bool circuit::getSequential()
+ {
+	 return this->isSequential;
  }
 
 inline double circuit::t_power(std::vector < std::vector< int> > _vect, const double & _high, const double & _low) {
@@ -676,12 +698,19 @@ inline void circuit::ClkNedd (flipflop & _flipf)
 	 filename_inputSignal = file_name;
 	 open_inputFile();
 	 clk = _clk;
-
+	 if (open_inputFile==false)
+	 {
+		 std::cerr << "ERROR: in the input file" << std::endl;
+		 std::exit(EXIT_FAILURE);
+	 }
 	 int innerCount = 0;
-		
+
+	 if (clk==0)
+	 {
+		 clk = vect_matrix.size();
+	 }
 	 if (isSequential==false)
 	 {
-		 clk = 1;
 
 		 //combinatorio circuits and it only needs the first line written in the input file
 		 if (input.size()<=vect_matrix[0].size())
@@ -712,12 +741,16 @@ inline void circuit::ClkNedd (flipflop & _flipf)
 		 else
 		 {
 			 std::cerr << "ERROR: input's value are too few" << std::endl;
+			 std::exit(EXIT_FAILURE);
 		 }
 	 }
 	 else
 	 {
 		 int checkCLK=0;
-
+		 if(input.size()> vect_matrix[0].size()) {
+			 std::cerr << "ERROR: input's value are too few" << std::endl;
+			 std::exit(EXIT_FAILURE);
+		 }
 		 if (clk <= vect_matrix.size())
 		 {
 			 //get the clk needed for each FF
@@ -799,17 +832,11 @@ inline void circuit::ClkNedd (flipflop & _flipf)
 				 }
 				 simulation_output.push_back(vect_output); 
 			 }
-			/*for (int i = 0; i < simulation_output.size(); i++)
-			 {
-				 for (size_t j = 0; j < simulation_output[i].size(); j++)
-				 {
-					 std::cout << "label: " << simulation_output[i][j].getLabel() << " valore: " << simulation_output[i][j].getValue() << std::endl;
-				 }
-			 }*/
 		 }
 		 else
 		 {
 			 std::cerr << "ERROR: the clock is too big respect to input's lines" << std::endl;
+			 std::exit(EXIT_FAILURE);
 		 }
 	 }
 	 return simulation_output;
@@ -893,7 +920,7 @@ inline void circuit::ClkNedd (flipflop & _flipf)
 
 				 btree *_head;
 				 //create the tree
-				 _head = builtTree(output[i].getParse());
+				 _head = buildTree(output[i].getParse());
 
 				 //calculate the path
 				 t_path = Path(_head);
@@ -930,7 +957,7 @@ inline void circuit::ClkNedd (flipflop & _flipf)
 			 t_paths.label = FF[e].FF_getLabel();
 
 			 btree * F_head;
-			 F_head = builtTree(FF[e].FF_getParse());
+			 F_head = buildTree(FF[e].FF_getParse());
 			 if (F_head->left==NULL && F_head->right==NULL)
 			 {
 				 calculatepath tt;
@@ -1026,7 +1053,7 @@ inline void circuit::ClkNedd (flipflop & _flipf)
 				 else
 				 {
 					 btree *_head;
-					 _head = builtTree(output[e].getParse());
+					 _head = buildTree(output[e].getParse());
 					 t_path = Path(_head);
 					 int m_flag = 0;
 

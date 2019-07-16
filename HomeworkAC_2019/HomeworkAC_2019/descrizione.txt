@@ -4,8 +4,7 @@ input l, m
 output x, z, y
 );
 FF1 = NOT l
-FF2 = l
-FF3 = (FF89 OR l) OR (1)
-assign x = m AND FF5
-assign y = FF1 OR 6
+FF2 = FF1 OR m
+assign x = m AND FF2
+assign y = FF1 OR l
 endmodule

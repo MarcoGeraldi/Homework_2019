@@ -4,7 +4,7 @@
 #include <iostream>
 #include <vector>
 #include <sstream>
-
+#include "stringParser.hpp"
 
  struct calculatepath {
 	int path;
@@ -20,28 +20,6 @@
  std::vector <calculatepath> allpaths;
  int counterpath = 0;
  int flag = 0;
-
-
-//returns position of occurrencies
-std::vector<int> get_Positions(const std::string &_inputString, const std::string &to_find) {
-
-	std::vector <int> positions;
-	//positions.clear();
-
-	bool found = false;
-
-	for (size_t i = 0; i < _inputString.length(); i++)
-	{
-		if (_inputString.substr(i, to_find.length()) == to_find)
-		{
-			found = true;
-			positions.push_back(i);
-		}
-
-	}
-
-	return positions;
-}
 
 btree * newNode(std::string & _value_to_assign) {
 	btree * temp = new btree;
@@ -77,16 +55,16 @@ che contiene l'indirizzo del nodo a cui devo puntare e che aggiorno ogni volta (
 parto sempre dalla parentesi più interna partendo da sx e poi a andando a dx nel caso
 */
 
-btree * builtTree(const std::string & _input_string) {
+btree * buildTree(const std::string & _input_string) {
 
 	std::string new_input = _input_string;
 	btree * head = nullptr;
-	std::vector<int> positionOpenB;
-	std::vector<int> positionCloseB;
+	std::vector<size_t> positionOpenB;
+	std::vector<size_t> positionCloseB;
 	std::vector <btree *> special;
 
 	//get how many brackets are in the initial sentence in order to know how many times the tree's code has to run
-	int innerCounter = get_Positions(_input_string, "(").size();
+	int innerCounter = getPositions(_input_string, "(").size();
 	
 	//need the special character to highlight the place where there was a bracket before
 	std::string special_character = "*";
@@ -95,8 +73,8 @@ btree * builtTree(const std::string & _input_string) {
 	for (int i = 0; i < innerCounter+1; i++)
 	{
 		//everytime the string newinput is upload and need to know how many brackets are in there
-		positionOpenB = get_Positions(new_input, "(");
-		positionCloseB = get_Positions(new_input, ")");
+		positionOpenB = getPositions(new_input, "(");
+		positionCloseB = getPositions(new_input, ")");
 
 		size_t counterOpen = 0;
 		int counterClose = 0;

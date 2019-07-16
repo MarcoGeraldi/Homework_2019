@@ -165,7 +165,7 @@ signal_output solve(std::vector <std::string> &_toSolve, const std::vector<signa
 			}
 			 
 		}
-		std::cerr << "ERROR: flipflop " << _toSolve[0] << " not defined" << std::endl;
+		std::cerr << "ERROR: " << _toSolve[0] << " not defined" << std::endl;
 	}
 	// in any other case
 	else {
@@ -365,6 +365,7 @@ std::string getSig(const std::string & inputString, const std::vector<signal_inp
 	positionOpen = getPositions(_inputString, "(");
 	positionClose = getPositions(_inputString, ")");
 
+	 
 
 	size_t counterOpen = 0;
 	size_t counterClose = 0;

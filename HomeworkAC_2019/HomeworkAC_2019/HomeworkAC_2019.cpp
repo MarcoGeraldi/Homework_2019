@@ -16,23 +16,418 @@ la classe deve contenere input, output, path min e max, coni logici, se è sequen
 */
 #include "HomeworkAC_2019.h"
 
-int main(){ 
-	
-	 
-	/*for (int i = 0; i < myCircuits.size(); i++) {
-		std::cout << myCircuits[i].printPaths();
-	}*/
-	filename_circuitDescr = "descrizione.txt";
-	std::vector <circuit> myCircuits = saveData();
-	//myCircuits[0].simulation("input.txt", 4);
-	/*double c;
-	filename_powerDescr = "potenza.txt";
-	c=myCircuits[0].getPower();
+int main(int argc, char* argv[]) {
 
-	std::cout << c;*/
-	//std::cout << myCircuits[i].printPaths() << std::endl;
+
+	filename_circuitDescr = argv[1];
+	std::vector <circuit> myCircuits = saveData();
+	std::vector<std::vector <signal_output>> simulation;
+
+	/////////////////////////////////////////////////////////
+	///////////////////	Title ///////////////////////////////
+	/////////////////////////////////////////////////////////
+	std::cout << "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
+	std::cout << "+++++++++++++++++      Homework 2019: Digital Circuits Simulator.      +++++++++++++++++" << std::endl;
+	std::cout << "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" << std::endl << std::endl;
+	std::cout << "----------------------------------------------------------------------------------------" << std::endl << std::endl;
+
+	/////////////////////////////////////////////////////////
+	/////////////// Select Circuit  /////////////////////////
+	/////////////////////////////////////////////////////////
+	std::string inputString;
+	bool checkString = true;
+	int circuitSelected = 0;
+	while (1) {
+		do
+		{
+
+			std::cout << "*******************************************************" << std::endl;
+			std::cout << "****************** Select Circuit *********************" << std::endl;
+			std::cout << "*******************************************************" << std::endl;
+
+			checkString = true;
+			std::cout << "Found " << myCircuits.size() << " circuits." << std::endl << "Select one to continue." << std::endl;
+			for (size_t i = 0; i < myCircuits.size(); i++)
+			{
+				std::cout << "[" << i+1 << "] " << myCircuits[i].getLabel() << std::endl;
+			}
+
+			std::cout << "[0] EXIT" << std::endl;
+
+			// Get circuit to test
+			std::cin >> inputString;
+
+			
+
+			//check if inputstring is a number
+			for (size_t i = 0; i < inputString.size(); i++) { if (!isdigit(inputString[i])) checkString = false; }
+			if (checkString) {
+				circuitSelected = stoi(inputString)-1;
+
+				if (stoi(inputString)==0)
+				{
+					std::exit(EXIT_SUCCESS);
+				}
+				//check circuitSelected
+				if (circuitSelected > myCircuits.size())
+				{
+					std::cout << "Circuit Selected not found." << std::endl;
+				}
+			}
+			else {
+				std::cout << "Circuit Selected not found." << std::endl;
+#ifdef ENABLE_CLEARSCREEN
+				system("PAUSE");
+				system("CLS");
+#endif // ENABLE_CLEARSCREEN
+			}
+
+		} while (circuitSelected > myCircuits.size() || checkString == false);
+
+		// continue to the next screen
+#ifdef ENABLE_CLEARSCREEN
+		system("CLS");
+#endif // ENABLE_CLEARSCREEN
+		bool thisCircuit = true;
+		while (thisCircuit) {
+			/////////////////////////////////////////////////////////
+			/////////////// Select Option  //////////////////////////
+			/////////////////////////////////////////////////////////
+			int optionSelected = -1; // initialize it to a not possible value
+			do
+			{
+
+				std::cout << "*******************************************************" << std::endl;
+				std::cout << "****************** Select Option **********************" << std::endl;
+				std::cout << "*******************************************************" << std::endl;
+
+				checkString = true;
+
+				std::cout << "Circuit [" << circuitSelected << "] " << myCircuits[circuitSelected].getLabel() << " selected" << std::endl;
+				std::cout << "Select one option" << std::endl
+					<< "[1] Simulate Circuit" << std::endl
+					<< "[2] Analyze Circuit" << std::endl
+					<< "[9] Select another circuit" << std::endl
+					<< "[0] EXIT" << std::endl;
+
+				// Get option to test
+				std::cin >> inputString;
+				std::cout << std::endl;
+
+				//check if inputstring is a number
+
+				if (inputString != "0" && inputString != "1" && inputString != "2"&& inputString != "92")
+				{
+					checkString = false;
+					std::cout << "option not found." << std::endl;
+
+#ifdef ENABLE_CLEARSCREEN
+					system("PAUSE");
+					system("CLS");
+#endif // ENABLE_CLEARSCREEN
+				}
+#ifdef ENABLE_CLEARSCREEN 
+				system("CLS");
+#endif // ENABLE_CLEARSCREEN
+
+
+				if (checkString)
+				{
+					for (size_t i = 0; i < inputString.size(); i++)	if (!isdigit(inputString[i])) checkString = false;
+					optionSelected = stoi(inputString);
+				}
+
+			} while (optionSelected != 0 && optionSelected != 1); //simulazione o analisi 
+
+			/////////////////////////////////////////////////////////
+			/////////////// Simulation & Analysis ///////////////////
+			/////////////////////////////////////////////////////////
+
+			//simulation
+			if (optionSelected == 1)
+			{
+				//simulation
+
+				//simulazione:	1 file di  input
+				//				2 clk
+				//				stampa output
+				std::cout << "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
+				std::cout << "+++++++++++++++++++++++++++++++  Circuit Simulation.  ++++++++++++++++++++++++++++++++++" << std::endl;
+				std::cout << "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" << std::endl << std::endl;
+				std::cout << "----------------------------------------------------------------------------------------" << std::endl << std::endl;
+				std::cout << "Inser input filename: " << std::endl;
+				std::cin >> filename_inputSignal;
+
+				int clk = 1;
+				if (myCircuits[circuitSelected].getSequential())
+				{
+					//check for clock
+					do
+					{
+						checkString = true;
+						std::cout << "The circuit selected is sequential. Insert clock frequency." << std::endl << "Insert \"0\" to skip" << std::endl;
+						std::cin >> inputString;
+						for (size_t i = 0; i < inputString.size(); i++)	if (!isdigit(inputString[i])) checkString = false;
+						if (checkString) clk = stoi(inputString);
+						else std::cout << "the clock frequency inserted is not valid, please try again." << std::endl;
+					} while (checkString == false);
+
+				}
+				simulation = myCircuits[circuitSelected].simulation(filename_inputSignal, clk);
+
+#ifdef ENABLE_CLEARSCREEN
+				system("CLS");
+#endif // ENABLE_CLEARSCREEN
+
+				//get simulation values
+				int simulation_optionSelected = -1; // initialize it to a not possible value
+				do
+				{
+					checkString = true;
+					std::cout << "Simulation finished. please select one of the following options:" << std::endl
+						<< "[1] Print on screen" << std::endl
+						<< "[2] Print on file" << std::endl
+						<< "[9] Select another circuit" << std::endl
+						<< "[0] EXIT" << std::endl;
+
+					// Get option to test
+					std::cin >> inputString;
+					std::cout << std::endl;
+
+					//check if inputstring is a number
+					if (inputString != "0" && inputString != "1"&& inputString != "2" && inputString != "9")
+					{
+						checkString = false;
+						std::cout << "option not found." << std::endl;
+					}
+#ifdef ENABLE_CLEARSCREEN
+					system("PAUSE");
+					system("CLS");
+#endif // ENABLE_CLEARSCREEN
+
+
+					if (checkString)
+					{
+						for (size_t i = 0; i < inputString.size(); i++)	if (!isdigit(inputString[i])) checkString = false;
+						simulation_optionSelected = stoi(inputString);
+					}
+
+				} while (simulation_optionSelected != 0 && simulation_optionSelected != 1);
+
+				//print values
+				switch (simulation_optionSelected)
+				{
+					//print on screen
+				case 1:
+					for (int i = 0; i < simulation.size(); i++)
+					{
+						for (size_t j = 0; j < simulation[i].size(); j++)
+						{
+							std::cout << "label: " << simulation[i][j].getLabel() << " valore: " << simulation[i][j].getValue() << std::endl;
+						}
+					}
+#ifdef ENABLE_CLEARSCREEN
+					system("PAUSE");
+					system("CLS");
+#endif // ENABLE_CLEARSCREEN
+					break;
+					//print on file -- da fare
+				case 2:
+#ifdef ENABLE_CLEARSCREEN
+					system("PAUSE");
+					system("CLS");
+#endif // ENABLE_CLEARSCREEN
+					break;
+					//exit
+				case 0:
+#ifdef ENABLE_CLEARSCREEN
+					system("PAUSE");
+					system("CLS");
+#endif // ENABLE_CLEARSCREEN
+					break;
+					//select another circuit
+				case 9:
+#ifdef ENABLE_CLEARSCREEN
+					system("PAUSE");
+					system("CLS");
+#endif // ENABLE_CLEARSCREEN
+					break;
+				default:
+					break;
+				}
+			}
+
+			//analysis
+			if (optionSelected == 2)
+			{
+				//analisi:	1 path minimo
+				//			2 path max
+				//			3 coni logici
+				//			4 tutto
+				//			5 potenza -> file di potenza, file di input e clk
+
+				std::cout << "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
+				std::cout << "++++++++++++++++++++++++++++++++  Circuit Analysis.  +++++++++++++++++++++++++++++++++++" << std::endl;
+				std::cout << "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" << std::endl << std::endl;
+				std::cout << "----------------------------------------------------------------------------------------" << std::endl << std::endl;
+
+				checkString = true;
+				int analysis_optionSelected = -1;
+				do
+				{
+					std::cout << "Select one option" << std::endl
+						<< "[1] Print Path Min" << std::endl
+						<< "[2] Print Path Max" << std::endl
+						<< "[3] Print Logical Cones" << std::endl
+						<< "[4] Print All Paths" << std::endl
+						<< "[5] Print Power Dissipated" << std::endl
+						<< "[9] Select a new circuit" << std::endl
+						<< "[0] EXIT" << std::endl;
+
+					// Get option to test
+					std::cin >> inputString;
+					std::cout << std::endl;
+
+					//check if inputstring is a number
+
+					if (inputString != "0" && inputString != "1" &&
+						inputString != "2" && inputString != "3" &&
+						inputString != "4" && inputString != "5" && inputString != "9")
+					{
+						checkString = false;
+						std::cout << "option not found." << std::endl;
+					}
+#ifdef ENABLE_CLEARSCREEN
+					system("PAUSE");
+					system("CLS");
+#endif // ENABLE_CLEARSCREEN
+					if (checkString)
+					{
+						for (size_t i = 0; i < inputString.size(); i++)	if (!isdigit(inputString[i])) checkString = false;
+						analysis_optionSelected = stoi(inputString);
+					}
+				} while (analysis_optionSelected != 0 && analysis_optionSelected != 1 &&
+					analysis_optionSelected != 2 && analysis_optionSelected != 3 &&
+					analysis_optionSelected != 4);
+
+				myCircuits[circuitSelected].createTree();
+
+				switch (analysis_optionSelected)
+				{
+					//print path min
+				case 1:
+					std::cout << myCircuits[circuitSelected].printMin();
+#ifdef ENABLE_CLEARSCREEN
+					system("PAUSE");
+					system("CLS");
+#endif // ENABLE_CLEARSCREEN
+					break;
+
+					//print path max
+				case 2:
+					std::cout << myCircuits[circuitSelected].printMax();
+#ifdef ENABLE_CLEARSCREEN
+					system("PAUSE");
+					system("CLS");
+#endif // ENABLE_CLEARSCREEN
+					break;
+
+					//print Logical cones
+				case 3:
+					std::cout << myCircuits[circuitSelected].printConiLogici();
+#ifdef ENABLE_CLEARSCREEN
+					system("PAUSE");
+					system("CLS");
+#endif // ENABLE_CLEARSCREEN
+					break;
+
+					//print All
+				case 4:
+					std::cout << myCircuits[circuitSelected].printPaths();
+#ifdef ENABLE_CLEARSCREEN
+					system("PAUSE");
+					system("CLS");
+#endif // ENABLE_CLEARSCREEN
+					break;
+
+					//EXIT
+				case 0:
+					std::exit(EXIT_SUCCESS);
+					break;
+
+					//select another circuit
+				case 9:
+#ifdef ENABLE_CLEARSCREEN
+					thisCircuit = false;
+					system("CLS");
+#endif // ENABLE_CLEARSCREEN
+					break;
+
+					//print power
+				case 5:
+
+					std::cout << "*******************************************************" << std::endl;
+					std::cout << "************** Calculating Power Dissipated ***********" << std::endl;
+					std::cout << "*******************************************************" << std::endl;
+
+					std::cout << "Insert power definitions filename: " << std::endl;
+					std::cin >> filename_powerDescr;
+					double powerLoss = 0;
+					//there circuit were not simulated 
+					if (simulation.size() == 0)
+					{
+						std::cout << "The circuit has never been simulated, so in order to calculate power loss insert input filename: " << std::endl;
+						std::cin >> filename_inputSignal;
+						int clk = 1;
+						if (myCircuits[circuitSelected].getSequential())
+						{
+							//check for clock
+							do
+							{
+								checkString = true;
+								std::cout << "The circuit selected is sequential. Insert clock frequency." << std::endl << "Insert \"0\" to skip" << std::endl;
+								std::cin >> inputString;
+								for (size_t i = 0; i < inputString.size(); i++)	if (!isdigit(inputString[i])) checkString = false;
+								if (checkString) clk = stoi(inputString);
+								else std::cout << "the clock frequency inserted is not valid, please try again." << std::endl;
+							} while (checkString == false);
+						}
+						myCircuits[circuitSelected].simulation(filename_inputSignal, clk);
+					}
+
+					powerLoss = myCircuits[circuitSelected].getPower();
+					std::cout << "Total power dissipation: " << powerLoss << std::endl;
+#ifdef ENABLE_CLEARSCREEN
+					system("PAUSE");
+					system("CLS");
+#endif // ENABLE_CLEARSCREEN
+					break;
+
+				}
+			}
+
+			//select another circuit
+			if (optionSelected == 9)
+			{
+				thisCircuit = false;
+#ifdef ENABLE_CLEARSCREEN 
+				system("CLS");
+#endif // ENABLE_CLEARSCREEN
+			}
+
+			//exit
+			if (optionSelected==0)
+			{
+				std::exit(EXIT_SUCCESS);
+			}
+
+		}
+	}
+
 	return 0;
 }
+
+
 
 std::vector <circuit> saveData() {
 	
@@ -710,11 +1105,6 @@ std::vector <circuit> saveData() {
 			}
 		}
 		
-		for (size_t i = 0; i < circuit_list.size(); i++)
-		{
-			circuit_list[i].createTree();
-		}
-		
 		if (isOk == false)
 		{
 			std::cerr << "ERROR: the file is not formatted correctly" << std::endl;
@@ -726,19 +1116,5 @@ std::vector <circuit> saveData() {
 	std::cerr << "ERROR: the file is not formatted correctly" << std::endl;
 	std::exit(EXIT_FAILURE);
 }
-
-
-void menu() {
-
-	filename_circuitDescr = "descrizione.txt";
-	std::vector <circuit> myCircuits = saveData();
-	std::string what_to_do;
-	int which_circuit;
-
-	for (size_t i = 0; i < myCircuits.size(); i++)
-	{
-
-	}
-}
-
+ 
  

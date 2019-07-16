@@ -32,17 +32,10 @@ struct powerDef {
 	double to0;
 };
 
-//INPUT FILE
-
-/*
-	- LEGGERE LA PRIMA RIGA E VEDERE SE E' VUOTA
-	- CONTROLLARE CHE IL NUMERO DI SEGNALI SIA PARI AL NUMERO DI VALORI
-	- CONTROLLARE CHE OGNI VALORE SIA 1 O 0
-	- CONTROLLARE CHE IL CLK SIA PARI O MINORE DEL NUMERO DI RIGHE
-*/
+bool isOk = true;
 
 bool open_inputFile() {
-	bool isOk = true;
+	isOk = true;
 	std::vector <int> vect_signal;
 	std::string line;
 
@@ -53,13 +46,14 @@ bool open_inputFile() {
 	if (!stream_inputSignal.is_open()) {
 		std::cerr << "ERROR: can't open " << filename_inputSignal << std::endl;
 		return false;
+		std::exit(EXIT_FAILURE);
 	}
 	else
 	{
 		//if the file is empty return an error
 		if (stream_inputSignal.eof()) {
 			std::cerr << "ERROR: " << filename_inputSignal << " is empty." << std::endl;
-			return false;
+			std::exit(EXIT_FAILURE);
 		}
 		int lineIndex = 1; //first line
 		//open the file until the end
@@ -104,22 +98,7 @@ bool open_inputFile() {
 	stream_inputSignal.close();
 	return isOk;
 }
-
-//CIRCUIT'S DESCRIPTION
-
-/*
-	TODO:
-	CONTROLLI SUI FLIFLOP
-	SALVARE FLIPFLOP
-	ERRORI DI SINTASSI
-	SALVARE VARIABILI:
-		NOME DEL CIRCUITO 
-		INPUT 
-		OUTPUT
-		ASSIGN STRING
-		FFSTRING
-		
-*/
+ 
 
 void checkString_Save(std::string &_temp, const std::string & _word_to_compare, std::vector <int> &_position, int & _index, bool _ok, std::vector <std::string> & _save_line) {
 
@@ -147,7 +126,7 @@ void checkString_Save(std::string &_temp, const std::string & _word_to_compare, 
 bool check_circuitDescr()
 {
 	int index = 0;
-	bool isOk = true;
+	isOk = true;
 	std::string line, temp;
 
 	stream_circuitDescr.open(filename_circuitDescr, std::fstream::in);
@@ -275,47 +254,58 @@ bool check_circuitDescr()
 			}
 
 		if (line.find("clk") != std::string::npos) //look for the word clock 
+		{
+
+			std::istringstream _stream_temp(line); //save the line in a stream
+			_stream_temp >> temp; //save the sentence divided by space in a temporary value
+
+			if (temp.compare("clk") == 0) //if the word input is written correct then it saves the position
 			{
-
-				std::istringstream _stream_temp(line); //save the line in a stream
-				_stream_temp >> temp; //save the sentence divided by space in a temporary value
-
-				if (temp.compare("clk") == 0) //if the word input is written correct then it saves the position
-				{
-					_positionClk.push_back(index);
-				}
-
-				else
-				{
-					std::cerr << "ERROR: syntax error at line " << index + 1 << std::endl;
-					isOk = false;
-				}
+				_positionClk.push_back(index);
 			}
+			else
+			{
+				std::cerr << "ERROR: syntax error at line " << index + 1 << std::endl;
+				isOk = false;
+			}
+		}
 		
-			std::stringstream s_line(line);
-			std::vector<std::string > words;
-			std::string t_word;
-			while (std::getline(s_line, t_word, ' '))
-			{
-				t_word.erase(remove(t_word.begin(), t_word.end(), '\t'), t_word.end());
-				words.push_back(t_word);
-			}
+		std::stringstream s_line(line);
+		std::vector<std::string > words;
+		std::string t_word;
+		while (std::getline(s_line, t_word, ' '))
+		{
+			t_word.erase(remove(t_word.begin(), t_word.end(), '\t'), t_word.end());
+			words.push_back(t_word);
+		}
 
-			if (words.size()>0 &&
-				words[0] != "module" &&
-				words[0] != "clk" &&
-				words[0] != "input" &&
-				words[0] != "output" &&
-				words[0] != "assign" &&
-				(words[0][0] != 'F' && words[0][1] != 'F')
-				)
+		if (words.size()>0 &&
+			words[0] != "module" &&
+			words[0] != "clk" &&
+			words[0] != "input" &&
+			words[0] != "output" &&
+			words[0] != "assign" &&
+			(words[0][0] != 'F' && words[0][1] != 'F')
+			)
+		{
+			if (words.size()>1 && words[1] != "instance")
 			{
-				if (words.size()>1 && words[1] != "instance")
+				isOk = false;
+				std::cerr << "ERROR: syntax error at line : " << index + 1 << std::endl;
+			}
+			
+			if (words.size() > 1 && words[1] == "instance") {
+				bool nameFound = false;
+				for (size_t k = 0; k < all_name.size(); k++)
 				{
+					if (words[0] == all_name[k]) { nameFound = true; }
+				}
+				if (!nameFound) {
 					isOk = false;
-					std::cerr << "ERROR: syntax error at line : " << index + 1 << std::endl;
+					std::cerr << "ERROR: circuit " << words[0] << " not found at line : " << index + 1 << std::endl;
 				}
 			}
+		}
 			index++;
 	}
 		stream_circuitDescr.close();
@@ -484,6 +474,19 @@ bool check_circuitDescr()
 								<< std::endl;
 							isOk = false;
 						}
+						for (size_t j = 0; j < all_assign.size(); j++)
+						{
+							if (_positionAssign[j]>_positionModule[i] && _positionAssign[j] < _positionEndmodule[i])
+							{
+								if (_positionFF[counterFF] > _positionAssign[j])
+								{
+									std::cerr << "ERROR: the flipflop was found after assign in the circuit number: "
+										<< i + 1
+										<< std::endl;
+									isOk = false;
+								}
+							}
+						}
 					}
 				}
 				for (size_t counterInstance = 0; counterInstance < _positionInstance.size(); counterInstance++)
@@ -543,7 +546,7 @@ bool checkInput(std::vector <std::string> & _to_check) {
 			{
 				std::cerr << "ERROR: the input is not formatted correctly" << std::endl;
 				 
-				return false;
+				isOk=false;
 			}
 		}
 	}
@@ -568,7 +571,7 @@ bool checkInput(std::vector <std::string> & _to_check) {
 			if (inputs[k] == " " || inputs[k] == "\t"  )
 			{
 				std::cerr << "ERROR: input missing" << std::endl;
-				return false;
+				isOk=false;
 			}
 
 			//if there is a space or tab in the input definition gives an error
@@ -581,7 +584,7 @@ bool checkInput(std::vector <std::string> & _to_check) {
 					if (t_pos.size()>1 && (t_pos[t_pos.size()-1] - t_pos[t_pos.size()-2])>1)
 					{
 						std::cerr << "ERROR: syntax error " << std::endl;
-						return false;
+						isOk=false;
 					}
 				}
 			}
@@ -599,7 +602,7 @@ bool checkInput(std::vector <std::string> & _to_check) {
 				if (positionSquare_close<positionSquare_open)
 				{
 					std::cerr << "ERROR: check input array parenthesis" << std::endl;
-					return false;
+					isOk=false;
 				}
 				//check the inner part of square brackets
 				checkString = inputs[k].substr(positionSquare_open+1, positionSquare_close-positionSquare_open-1);
@@ -609,20 +612,20 @@ bool checkInput(std::vector <std::string> & _to_check) {
 					{
 						if (isdigit(checkString[j]) == 0)
 						{
-							std::cerr << "ERROR 3: syntax error in an input line" << std::endl;
-							return false;
+							std::cerr << "ERROR: syntax error in an input line" << std::endl;
+							isOk=false;
 						}
 					}
 				}
 				else
 				{
 					std::cerr << "ERROR: empty brackets" << std::endl;
-					return false;
+					isOk = false;
 				}
 			}
 		}	
 	}
-	return true;
+	return isOk;
 }
 
 bool checkOutput(std::vector <std::string> & _to_check) 
@@ -636,7 +639,7 @@ bool checkOutput(std::vector <std::string> & _to_check)
 			if (isalpha(_to_check[i][j]) == 0 && _to_check[i][j] != ',' &&  _to_check[i][j] != ' ' && _to_check[i][j] != '\t' && isdigit(_to_check[i][j]) == 0)
 			{
 				std::cerr << "ERROR: the output is not formatted correctly" << std::endl;
-				return false;
+				isOk = false;;
 			}
 		}
 
@@ -660,7 +663,7 @@ bool checkOutput(std::vector <std::string> & _to_check)
 				if (outputs[k] == " " || outputs[k] == "\t")
 				{
 					std::cerr << "ERROR: output missing" << std::endl;
-					return false;
+					isOk = false;;
 				}
 
 				//if there is a space or tab in the output definition giva an error
@@ -673,7 +676,7 @@ bool checkOutput(std::vector <std::string> & _to_check)
 						if (t_pos.size() > 1 && (t_pos[t_pos.size() - 1] - t_pos[t_pos.size() - 2]) > 1)
 						{
 							std::cerr << "ERROR: syntax error " << std::endl;
-							return false;
+							isOk = false;
 						}
 					}
 				}
@@ -682,15 +685,15 @@ bool checkOutput(std::vector <std::string> & _to_check)
 			}
 		}
 	}
-	return true;
+	return isOk;
 }
 
 bool checkAssign(std::vector <std::string> & _to_check) {
 	for (size_t i = 0; i < _to_check.size(); i++)
 	{
-		for (size_t j = 0; j < _to_check[i].length(); j++)//for each string that contains input
+		for (size_t j = 0; j < _to_check[i].length(); j++)//for each string that contains assign
 		{
-			//input can contains just letters, numbers, commas and square brackets
+			//assign can contains just letters, numbers, commas and square brackets
 			if (isalpha(_to_check[i][j]) == 0 &&
 				_to_check[i][j] != '(' && 
 				_to_check[i][j] != ')' && 
@@ -702,11 +705,34 @@ bool checkAssign(std::vector <std::string> & _to_check) {
 				_to_check[i][j] != ']')
 			{
 				std::cerr << "ERROR: syntax error at line " << _positionAssign[i]+1 << std::endl;
-				return false;
+				isOk = false;
 			}
 		}
+
+		//get the positions of opened and closed brackets
+		std::vector <size_t> assign_positionOpen = getPositions(_to_check[i], "(");
+		std::vector <size_t> assign_positionClose = getPositions(_to_check[i], ")");
+
+		if (assign_positionOpen.size() != assign_positionClose.size())
+		{
+			std::cerr << "ERROR: syntax error at line " << _positionAssign[i] + 1 << std::endl;
+			isOk = false;
+		}
+		else
+		{
+			for (size_t k = 0; k < assign_positionOpen.size(); k++)
+			{
+				if (assign_positionOpen[k] >= assign_positionClose[k])
+				{
+					std::cerr << "ERROR: syntax error at line " << _positionAssign[i] + 1 << std::endl;
+					isOk = false;
+				}
+			}
+		}
+
+		
 	}
-	return true;
+	return isOk;
 }
 
 bool checkFF(std::vector <std::string> &_to_check) {
@@ -721,7 +747,7 @@ bool checkFF(std::vector <std::string> &_to_check) {
 				_to_check[i][j] != '[' && _to_check[i][j] != ']')
 			{
 				std::cerr << "ERROR: syntax error at line " << _positionFF[i] + 1 << std::endl;
-				return false;
+				isOk = false;
 			}
 		}
 	}
@@ -734,12 +760,12 @@ bool checkFF(std::vector <std::string> &_to_check) {
 				if (isSequential[j] == false)
 				{
 					std::cerr << "ERROR: clock not defined in the circuit named: " << all_name[j] << std::endl;
-					return false;
+					isOk = false;
 				}
 			}
 		}
 	}
-	return true;
+	return isOk;
 }
 
 //da fare
@@ -754,19 +780,19 @@ std::vector <powerDef> checkPower() {
 	std::string line;
 	stream_powerDescr.open(filename_powerDescr, std::fstream::in); //open file
 
-	bool isOK = true;
+	 
 
 	//check for opening errors
 	if (!stream_powerDescr.is_open()) {
 		std::cerr << "ERROR: can't open " << filename_powerDescr << std::endl;
-		isOK=false;
+		isOk =false;
 	}
 	else
 	{
 		//if the file is empty return an error
 		if (stream_powerDescr.eof()) {
 			std::cerr << "ERROR: " << filename_powerDescr << " is empty." << std::endl;
-			isOK= false;
+			isOk = false;
 		}
 
 		int index = 0;
@@ -828,18 +854,18 @@ std::vector <powerDef> checkPower() {
 							else
 							{
 								std::cerr << "ERROR: syntax error at line: " << index;
-								isOK= false;
+								isOk = false;
 							}
 						}
 					else {
 							std::cerr << "ERROR: Syntax error at line: " << index << std::endl;
-							isOK = false;
+							isOk = false;
 						}
 						  
 					}
 					else {
 						std::cerr << "ERROR: Syntax error at line: " << index << std::endl;
-						isOK = false;
+						isOk = false;
 					
 					}
 				}
@@ -857,12 +883,12 @@ std::vector <powerDef> checkPower() {
 			if (_matrix_power[i].gate == _matrix_power[j].gate)
 			{
 				std::cerr << "ERROR: the gate " << _matrix_power[i].gate << " is defined too many times" << std::endl;
-				isOK= false;
+				isOk = false;
 			}
 		}
 	}
 	//everything is correct then proceed to add the gate missing assuming their powerloss equal to 0
-	 if (isOK)
+	 if (isOk)
 	{
 
 		for (size_t j = 0; j < gates.size(); j++)
@@ -890,20 +916,22 @@ std::vector <powerDef> checkPower() {
 	}
 	else
 	{
+		std::cerr << "ERROR: Something gone wrong while checking power" << std::endl;
 		std::exit(EXIT_FAILURE);
 	} 
 	 
 }
 
 bool checkSignals() {
-	if (
-		check_circuitDescr() &&
-		checkInput(all_input) &&
-		checkOutput(all_output) &&
-		checkAssign(all_assign) &&
-		checkFF(all_FF) &&
-		checkInstance(all_instance)
-		)	return true;
+
+	check_circuitDescr();
+	checkInput(all_input);
+	checkOutput(all_output);
+	checkFF(all_FF);
+	checkAssign(all_assign);
+	checkInstance(all_instance);
+
+	if (isOk) return true;
 
 	else return false;
 	
